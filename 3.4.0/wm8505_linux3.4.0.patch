@@ -1,0 +1,6463 @@
+diff -Naur linux-3.4.orig/arch/arm/boot/compressed/head-vt8500.S linux-3.4/arch/arm/boot/compressed/head-vt8500.S
+--- linux-3.4.orig/arch/arm/boot/compressed/head-vt8500.S	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/arm/boot/compressed/head-vt8500.S	2019-03-06 17:20:00.000000000 -0700
+@@ -23,24 +23,52 @@
+ 	ldreq	r7, .ID_BV07
+ 	beq	.Lendvt8500
+ 
++	@ VT8500 override - another version
++	ldr	r4, .VT8500SCCv2
++	cmp	r3, r4
++	ldreq	r7, .ID_BV07
++	beq	.Lendvt8500
++
+ 	@ WM8505 override
+ 	ldr	r4, .WM8505SCC
+ 	cmp	r3, r4
+ 	ldreq	r7, .ID_8505
+ 	beq	.Lendvt8500
+ 
++	@ WM8650 override
++	ldr	r4, .WM8650SCC
++	cmp	r3, r4
++	ldreq	r7, .ID_8650
++	beq	.Lendvt8500
++
++	@ WM8650 override - another version
++	ldr	r4, .WM8650SCCv2
++	cmp	r3, r4
++	ldreq	r7, .ID_8650
++	beq	.Lendvt8500
++
+ 	@ Otherwise, leave the bootloader's machine id untouched
++	b	.Lendvt8500
+ 
+ .SCCID:
+ 	.word	0xd8120000
++
+ .VT8500SCC:
+ 	.word	0x34000102
++.VT8500SCCv2:
++	.word	0x34000103
+ .WM8505SCC:
+ 	.word	0x34260103
++.WM8650SCC:
++	.word	0x34650101
++.WM8650SCCv2:
++	.word	0x34650103
+ 
+ .ID_BV07:
+ 	.word	MACH_TYPE_BV07
+ .ID_8505:
+ 	.word	MACH_TYPE_WM8505_7IN_NETBOOK
++.ID_8650:
++	.word	MACH_TYPE_WM8650REFBOARD
+ 
+ .Lendvt8500:
+diff -Naur linux-3.4.orig/arch/arm/configs/wmt_defconfig linux-3.4/arch/arm/configs/wmt_defconfig
+--- linux-3.4.orig/arch/arm/configs/wmt_defconfig	1969-12-31 17:00:00.000000000 -0700
++++ linux-3.4/arch/arm/configs/wmt_defconfig	2019-03-06 17:20:00.000000000 -0700
+@@ -0,0 +1,83 @@
++CONFIG_ARM=y
++CONFIG_AEABI=y
++CONFIG_ARCH_VT8500=y
++CONFIG_MACH_BV07=y
++CONFIG_MACH_WM8505_7IN_NETBOOK=y
++CONFIG_MACH_WM8650REFBOARD=y
++CONFIG_WMT_PANEL_800X480=y
++CONFIG_WMT_PANEL_800X600=y
++CONFIG_WMT_PANEL_1024X576=y
++CONFIG_WMT_PANEL_1024X600=y
++CONFIG_WMT_PANEL_1024X768=y
++CONFIG_TICK_ONESHOT=y
++CONFIG_NO_HZ=y
++CONFIG_HIGH_RES_TIMERS=y
++CONFIG_PREEMPT_VOLUNTARY=y
++CONFIG_DEVTMPFS=y
++CONFIG_DEVTMPFS_MOUNT=y
++CONFIG_MTD=y
++CONFIG_MTD_BLKDEVS=y
++CONFIG_MTD_BLOCK=y
++CONFIG_MTD_CMDLINE_PARTS=y
++CONFIG_MTD_NAND=y
++CONFIG_MTD_NAND_WMT=y
++CONFIG_MTD_UBI=y
++CONFIG_BLK_DEV_LOOP=y
++CONFIG_SCSI=y
++CONFIG_BLK_DEV_SD=y
++CONFIG_NET=y
++CONFIG_PACKET=y
++CONFIG_UNIX=y
++CONFIG_INET=y
++CONFIG_WIRELESS=y
++CONFIG_CFG80211=y
++CONFIG_MAC80211=y
++CONFIG_NETDEVICES=y
++CONFIG_NET_ETHERNET=y
++CONFIG_NETDEV_1000=y
++CONFIG_VIA_VELOCITY=y
++CONFIG_INPUT_EVDEV=y
++CONFIG_GPIO_SYSFS=y
++CONFIG_BACKLIGHT_LCD_SUPPORT=y
++CONFIG_BACKLIGHT_PWM=y
++CONFIG_EXPERIMENTAL=y
++CONFIG_RT2X00=y
++CONFIG_RT2800USB=y
++CONFIG_RT2800USB_RT33XX=y
++CONFIG_RT2800USB_RT35XX=y
++CONFIG_SERIAL_CORE=y
++CONFIG_SERIAL_CORE_CONSOLE=y
++CONFIG_SERIAL_VT8500=y
++CONFIG_SERIAL_VT8500_CONSOLE=y
++CONFIG_FB=y
++CONFIG_FB_VT8500=y
++CONFIG_FB_WM8505=y
++CONFIG_FRAMEBUFFER_CONSOLE=y
++CONFIG_USB=y
++CONFIG_USB_DEVICEFS=y
++CONFIG_USB_UHCI_HCD=y
++CONFIG_USB_EHCI_HCD=y
++CONFIG_USB_STORAGE=y
++CONFIG_USB_LIBUSUAL=y
++CONFIG_EXT4_FS=y
++CONFIG_BTRFS_FS=y
++CONFIG_VFAT_FS=y
++CONFIG_TMPFS=y
++CONFIG_NFS_FS=y
++CONFIG_NFS_V3=y
++CONFIG_NFS_V3_ACL is not set
++CONFIG_NFS_V4 is not set
++CONFIG_NFSD=y
++CONFIG_NFSD_V3=y
++CONFIG_MMC=y
++CONFIG_MMC_WMT=y
++CONFIG_RTC_DRV_VT8500=y
++CONFIG_RTC_CLASS=y
++CONFIG_RTC_HCTOSYS=y
++CONFIG_RTC_HCTOSYS_DEVICE="rtc0"
++CONFIG_IKCONFIG=y
++CONFIG_IKCONFIG_PROC=y
++CONFIG_BLK_DEV_INITRD=y
++CONFIG_DEBUG_KERNEL=y
++CONFIG_DEBUG_LL=y
++CONFIG_EARLY_PRINTK=y
+diff -Naur linux-3.4.orig/arch/arm/kernel/perf_event_v7.c linux-3.4/arch/arm/kernel/perf_event_v7.c
+--- linux-3.4.orig/arch/arm/kernel/perf_event_v7.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/arm/kernel/perf_event_v7.c	2019-03-06 17:20:00.000000000 -0700
+@@ -483,6 +483,20 @@
+ 			[C(RESULT_MISS)]	= CACHE_OP_UNSUPPORTED,
+ 		},
+ 	},
++	[C(NODE)] = {
++		[C(OP_READ)] = {
++			[C(RESULT_ACCESS)]	= CACHE_OP_UNSUPPORTED,
++			[C(RESULT_MISS)]	= CACHE_OP_UNSUPPORTED,
++		},
++		[C(OP_WRITE)] = {
++			[C(RESULT_ACCESS)]	= CACHE_OP_UNSUPPORTED,
++			[C(RESULT_MISS)]	= CACHE_OP_UNSUPPORTED,
++		},
++		[C(OP_PREFETCH)] = {
++			[C(RESULT_ACCESS)]	= CACHE_OP_UNSUPPORTED,
++			[C(RESULT_MISS)]	= CACHE_OP_UNSUPPORTED,
++		},
++	},
+ };
+ 
+ /*
+@@ -590,6 +604,20 @@
+ 		},
+ 		[C(OP_PREFETCH)] = {
+ 			[C(RESULT_ACCESS)]	= CACHE_OP_UNSUPPORTED,
++			[C(RESULT_MISS)]	= CACHE_OP_UNSUPPORTED,
++		},
++	},
++	[C(NODE)] = {
++		[C(OP_READ)] = {
++			[C(RESULT_ACCESS)]	= CACHE_OP_UNSUPPORTED,
++			[C(RESULT_MISS)]	= CACHE_OP_UNSUPPORTED,
++		},
++		[C(OP_WRITE)] = {
++			[C(RESULT_ACCESS)]	= CACHE_OP_UNSUPPORTED,
++			[C(RESULT_MISS)]	= CACHE_OP_UNSUPPORTED,
++		},
++		[C(OP_PREFETCH)] = {
++			[C(RESULT_ACCESS)]	= CACHE_OP_UNSUPPORTED,
+ 			[C(RESULT_MISS)]	= CACHE_OP_UNSUPPORTED,
+ 		},
+ 	},
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/bv07.c linux-3.4/arch/arm/mach-vt8500/bv07.c
+--- linux-3.4.orig/arch/arm/mach-vt8500/bv07.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/bv07.c	2019-03-06 17:20:00.000000000 -0700
+@@ -32,10 +32,13 @@
+ 	&vt8500_device_uart0,
+ 	&vt8500_device_lcdc,
+ 	&vt8500_device_ehci,
++	&vt8500_device_rhine0,
+ 	&vt8500_device_ge_rops,
+ 	&vt8500_device_pwm,
+ 	&vt8500_device_pwmbl,
+ 	&vt8500_device_rtc,
++	&vt8500_device_sdmmc,
++	&vt8500_device_nand,
+ };
+ 
+ static void vt8500_power_off(void)
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/devices.c linux-3.4/arch/arm/mach-vt8500/devices.c
+--- linux-3.4.orig/arch/arm/mach-vt8500/devices.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/devices.c	2019-03-06 17:20:00.000000000 -0700
+@@ -134,6 +134,24 @@
+ 	},
+ },
+ #endif
++#ifdef CONFIG_WMT_PANEL_1024X768
++{
++	.xres_virtual	= 1024,
++	.yres_virtual	= 768 * 2,
++	.mode		= {
++		.name		= "1024x768",
++		.xres		= 1024,
++		.yres		= 768,
++		.left_margin	= 74,
++		.right_margin	= 255,
++		.upper_margin	= 7,
++		.lower_margin	= 33,
++		.hsync_len	= 34,
++		.vsync_len	= 6,
++		.vmode		= FB_VMODE_NONINTERLACED,
++	},
++},
++#endif
+ };
+ 
+ static int current_panel_idx __initdata = ARRAY_SIZE(panels) - 1;
+@@ -204,6 +222,17 @@
+ 	},
+ };
+ 
++static u64 uhci_dma_mask = DMA_BIT_MASK(32);
++
++struct platform_device vt8500_device_uhci = {
++	.name		= "vt8500-uhci",
++	.id		= 0,
++	.dev		= {
++		.dma_mask	= &uhci_dma_mask,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
+ struct platform_device vt8500_device_ge_rops = {
+ 	.name		= "wmt_ge_rops",
+ 	.id		= -1,
+@@ -234,6 +263,61 @@
+ 	.id		= 0,
+ };
+ 
++static u64 sdmmc_dma_mask = DMA_BIT_MASK(32);
++
++struct platform_device vt8500_device_sdmmc = {
++	.name		= "wmt-sdmmc",
++	.id		= 0,
++	.dev		= {
++		.dma_mask	= &sdmmc_dma_mask,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
++static u64 velocity_dma_mask = DMA_BIT_MASK(32);
++
++struct platform_device vt8500_device_velocity = {
++	.name		= "velocity",
++	.id		= 0,
++	.dev		= {
++		.dma_mask	= &velocity_dma_mask,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
++static u64 rhine0_dma_mask = DMA_BIT_MASK(32);
++
++struct platform_device vt8500_device_rhine0 = {
++	.name		= "via-rhine",
++	.id		= 0,
++	.dev		= {
++		.dma_mask	= &rhine0_dma_mask,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
++static u64 rhine1_dma_mask = DMA_BIT_MASK(32);
++
++struct platform_device vt8500_device_rhine1 = {
++	.name		= "via-rhine",
++	.id		= 1,
++	.dev		= {
++		.dma_mask	= &rhine1_dma_mask,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	},
++};
++
++static u64 nand_dma_mask = DMA_BIT_MASK(32);
++
++struct platform_device vt8500_device_nand = {
++	.name		= "vt8500-nand",
++	.id		= 0,
++	.dev		= {
++		.dma_mask	= &nand_dma_mask,
++		.coherent_dma_mask = DMA_BIT_MASK(32),
++	}
++};
++
+ struct map_desc wmt_io_desc[] __initdata = {
+ 	/* SoC MMIO registers */
+ 	[0] = {
+@@ -267,4 +351,13 @@
+ 	preallocate_fb(&panels[current_panel_idx], 32);
+ 	vt8500_device_wm8505_fb.dev.platform_data = &panels[current_panel_idx];
+ #endif
++}
++
++void __init wm8650_reserve_mem(void)
++{
++#if defined CONFIG_FB_WM8505
++	panels[current_panel_idx].bpp = 16; /* Always use RGB565 */
++	preallocate_fb(&panels[current_panel_idx], 32);
++	vt8500_device_wm8505_fb.dev.platform_data = &panels[current_panel_idx];
++#endif
+ }
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/devices.h linux-3.4/arch/arm/mach-vt8500/devices.h
+--- linux-3.4.orig/arch/arm/mach-vt8500/devices.h	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/devices.h	2019-03-06 17:20:00.000000000 -0700
+@@ -23,11 +23,16 @@
+ void __init wm8505_init_irq(void);
+ void __init vt8500_map_io(void);
+ void __init wm8505_map_io(void);
++void __init wm8650_map_io(void);
+ void __init vt8500_reserve_mem(void);
+ void __init wm8505_reserve_mem(void);
++void __init wm8650_reserve_mem(void);
+ void __init vt8500_gpio_init(void);
++void __init wm8505_gpio_init(void);
++void __init wm8650_gpio_init(void);
+ void __init vt8500_set_resources(void);
+ void __init wm8505_set_resources(void);
++void __init wm8650_set_resources(void);
+ 
+ extern unsigned long wmt_ic_base __initdata;
+ extern unsigned long wmt_sic_base __initdata;
+@@ -81,8 +86,15 @@
+ extern struct platform_device vt8500_device_lcdc;
+ extern struct platform_device vt8500_device_wm8505_fb;
+ extern struct platform_device vt8500_device_ehci;
++extern struct platform_device vt8500_device_uhci;
++extern struct platform_device vt8500_device_velocity;
++extern struct platform_device vt8500_device_rhine0;
++extern struct platform_device vt8500_device_rhine1;
+ extern struct platform_device vt8500_device_ge_rops;
+ extern struct platform_device vt8500_device_pwm;
+ extern struct platform_device vt8500_device_pwmbl;
+ extern struct platform_device vt8500_device_rtc;
++extern struct platform_device vt8500_device_sdmmc;
++extern struct platform_device vt8500_device_nand;
++
+ #endif
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/devices-vt8500.c linux-3.4/arch/arm/mach-vt8500/devices-vt8500.c
+--- linux-3.4.orig/arch/arm/mach-vt8500/devices-vt8500.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/devices-vt8500.c	2019-03-06 17:20:01.000000000 -0700
+@@ -58,6 +58,20 @@
+ 	tmp[1] = wmt_irq_res(IRQ_RTC);
+ 	tmp[2] = wmt_irq_res(IRQ_RTCSM);
+ 	wmt_res_add(&vt8500_device_rtc, tmp, 3);
++
++	tmp[0] = wmt_mmio_res(VT8500_SDMMC_BASE, SZ_1K);
++	tmp[1] = wmt_irq_res(IRQ_SDMMC);
++	tmp[2] = wmt_irq_res(IRQ_SDMMC_DMA);
++	wmt_res_add(&vt8500_device_sdmmc, tmp, 3);
++
++	tmp[0] = wmt_mmio_res(VT8500_ETHER_BASE, SZ_1K);
++	tmp[1] = wmt_irq_res(IRQ_ETHER);
++	wmt_res_add(&vt8500_device_rhine0, tmp, 2);
++
++	tmp[0] = wmt_mmio_res(VT8500_NAND_BASE, 0x400);
++	tmp[1] = wmt_irq_res(IRQ_NAND);
++	tmp[2] = wmt_irq_res(IRQ_NAND_DMA);
++	wmt_res_add(&vt8500_device_nand, tmp, 3);
+ }
+ 
+ static void __init vt8500_set_externs(void)
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/devices-wm8505.c linux-3.4/arch/arm/mach-vt8500/devices-wm8505.c
+--- linux-3.4.orig/arch/arm/mach-vt8500/devices-wm8505.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/devices-wm8505.c	2019-03-06 17:20:01.000000000 -0700
+@@ -65,6 +65,20 @@
+ 	tmp[1] = wmt_irq_res(IRQ_RTC);
+ 	tmp[2] = wmt_irq_res(IRQ_RTCSM);
+ 	wmt_res_add(&vt8500_device_rtc, tmp, 3);
++
++	tmp[0] = wmt_mmio_res(WM8505_SDMMC_BASE, SZ_1K);
++	tmp[1] = wmt_irq_res(IRQ_SDMMC);
++	tmp[2] = wmt_irq_res(IRQ_SDMMC_DMA);
++	wmt_res_add(&vt8500_device_sdmmc, tmp, 3);
++
++	tmp[0] = wmt_mmio_res(WM8505_ETHER_BASE, SZ_1K);
++	tmp[1] = wmt_irq_res(IRQ_ETHER);
++	wmt_res_add(&vt8500_device_velocity, tmp, 2);
++
++	tmp[0] = wmt_mmio_res(WM8505_NAND_BASE, 0x400);
++	tmp[1] = wmt_irq_res(IRQ_NAND);
++	tmp[2] = wmt_irq_res(IRQ_NAND_DMA);
++	wmt_res_add(&vt8500_device_nand, tmp, 3);
+ }
+ 
+ static void __init wm8505_set_externs(void)
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/devices-wm8650.c linux-3.4/arch/arm/mach-vt8500/devices-wm8650.c
+--- linux-3.4.orig/arch/arm/mach-vt8500/devices-wm8650.c	1969-12-31 17:00:00.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/devices-wm8650.c	2019-03-06 17:20:01.000000000 -0700
+@@ -0,0 +1,118 @@
++/* linux/arch/arm/mach-vt8500/devices-wm8650.c
++ *
++ * Copyright (C) 2011 Alexey Charkov <alchark@gmail.com>
++ *
++ * This software is licensed under the terms of the GNU General Public
++ * License version 2, as published by the Free Software Foundation, and
++ * may be copied, distributed, and modified under those terms.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ */
++
++#include <linux/platform_device.h>
++
++#include <mach/wm8650_regs.h>
++#include <mach/wm8650_irqs.h>
++#include <mach/i8042.h>
++#include "devices.h"
++
++void __init wm8650_set_resources(void)
++{
++	struct resource tmp[3];
++
++	tmp[0] = wmt_mmio_res(WM8650_GOVR_BASE, SZ_512);
++	wmt_res_add(&vt8500_device_wm8505_fb, tmp, 1);
++
++	tmp[0] = wmt_mmio_res(WM8650_UART0_BASE, 0x1040);
++	tmp[1] = wmt_irq_res(IRQ_UART0);
++	wmt_res_add(&vt8500_device_uart0, tmp, 2);
++
++	tmp[0] = wmt_mmio_res(WM8650_UART1_BASE, 0x1040);
++	tmp[1] = wmt_irq_res(IRQ_UART1);
++	wmt_res_add(&vt8500_device_uart1, tmp, 2);
++
++	tmp[0] = wmt_mmio_res(WM8650_UART2_BASE, 0x1040);
++	tmp[1] = wmt_irq_res(-1);
++	wmt_res_add(&vt8500_device_uart2, tmp, 2);
++
++	tmp[0] = wmt_mmio_res(WM8650_UART3_BASE, 0x1040);
++	tmp[1] = wmt_irq_res(-1);
++	wmt_res_add(&vt8500_device_uart3, tmp, 2);
++
++	tmp[0] = wmt_mmio_res(WM8650_UART4_BASE, 0x1040);
++	tmp[1] = wmt_irq_res(-1);
++	wmt_res_add(&vt8500_device_uart4, tmp, 2);
++
++	tmp[0] = wmt_mmio_res(WM8650_UART5_BASE, 0x1040);
++	tmp[1] = wmt_irq_res(-1);
++	wmt_res_add(&vt8500_device_uart5, tmp, 2);
++
++	tmp[0] = wmt_mmio_res(WM8650_EHCI_BASE, SZ_512);
++	tmp[1] = wmt_irq_res(IRQ_EHCI);
++	wmt_res_add(&vt8500_device_ehci, tmp, 2);
++
++	tmp[0] = wmt_mmio_res(WM8650_UHCI_BASE, SZ_512);
++	tmp[1] = wmt_irq_res(IRQ_UHCI);
++	wmt_res_add(&vt8500_device_uhci, tmp, 2);
++
++	tmp[0] = wmt_mmio_res(WM8650_GEGEA_BASE, SZ_256);
++	wmt_res_add(&vt8500_device_ge_rops, tmp, 1);
++
++	tmp[0] = wmt_mmio_res(WM8650_PWM_BASE, 0x44);
++	wmt_res_add(&vt8500_device_pwm, tmp, 1);
++
++	tmp[0] = wmt_mmio_res(WM8650_RTC_BASE, 0x2c);
++	tmp[1] = wmt_irq_res(IRQ_RTC);
++	tmp[2] = wmt_irq_res(IRQ_RTCSM);
++	wmt_res_add(&vt8500_device_rtc, tmp, 3);
++
++	tmp[0] = wmt_mmio_res(WM8650_SDMMC_BASE, SZ_1K);
++	tmp[1] = wmt_irq_res(IRQ_SDMMC);
++	tmp[2] = wmt_irq_res(IRQ_SDMMC_DMA);
++	wmt_res_add(&vt8500_device_sdmmc, tmp, 3);
++
++	tmp[0] = wmt_mmio_res(WM8650_ETHER_BASE, SZ_1K);
++	tmp[1] = wmt_irq_res(IRQ_ETHER);
++	wmt_res_add(&vt8500_device_rhine0, tmp, 2);
++
++	tmp[0] = wmt_mmio_res(WM8650_ETHER1_BASE, SZ_1K);
++	tmp[1] = wmt_irq_res(IRQ_ETHER1);
++	wmt_res_add(&vt8500_device_rhine1, tmp, 2);
++
++	tmp[0] = wmt_mmio_res(WM8650_NAND_BASE, 0x400);
++	tmp[1] = wmt_irq_res(IRQ_NAND);
++	tmp[2] = wmt_irq_res(IRQ_NAND_DMA);
++	wmt_res_add(&vt8500_device_nand, tmp, 3);
++}
++
++static void __init wm8650_set_externs(void)
++{
++	/* Non-resource-aware stuff */
++	wmt_ic_base = WM8650_IC_BASE;
++	wmt_sic_base = WM8650_SIC_BASE;
++	wmt_gpio_base = WM8650_GPIO_BASE;
++	wmt_pmc_base = WM8650_PMC_BASE;
++
++	wmt_nr_irqs = WM8650_NR_IRQS;
++	wmt_timer_irq = IRQ_PMCOS0;
++	wmt_gpio_ext_irq[0] = IRQ_GPIO;
++	wmt_gpio_ext_irq[1] = IRQ_GPIO;
++	wmt_gpio_ext_irq[2] = IRQ_GPIO;
++	wmt_gpio_ext_irq[3] = IRQ_GPIO;
++	wmt_gpio_ext_irq[4] = IRQ_GPIO;
++	wmt_gpio_ext_irq[5] = IRQ_GPIO;
++	wmt_gpio_ext_irq[6] = IRQ_GPIO;
++	wmt_gpio_ext_irq[7] = IRQ_GPIO;
++}
++
++void __init wm8650_map_io(void)
++{
++	iotable_init(wmt_io_desc, ARRAY_SIZE(wmt_io_desc));
++
++	/* Should be done before interrupts and timers are initialized */
++	wm8650_set_externs();
++}
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/gpio.c linux-3.4/arch/arm/mach-vt8500/gpio.c
+--- linux-3.4.orig/arch/arm/mach-vt8500/gpio.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/gpio.c	1969-12-31 17:00:00.000000000 -0700
+@@ -1,240 +0,0 @@
+-/* linux/arch/arm/mach-vt8500/gpio.c
+- *
+- * Copyright (C) 2010 Alexey Charkov <alchark@gmail.com>
+- *
+- * This software is licensed under the terms of the GNU General Public
+- * License version 2, as published by the Free Software Foundation, and
+- * may be copied, distributed, and modified under those terms.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- */
+-
+-#include <linux/gpio.h>
+-#include <linux/init.h>
+-#include <linux/irq.h>
+-#include <linux/io.h>
+-
+-#include "devices.h"
+-
+-#define to_vt8500(__chip) container_of(__chip, struct vt8500_gpio_chip, chip)
+-
+-#define ENABLE_REGS	0x0
+-#define DIRECTION_REGS	0x20
+-#define OUTVALUE_REGS	0x40
+-#define INVALUE_REGS	0x60
+-
+-#define EXT_REGOFF	0x1c
+-
+-static void __iomem *regbase;
+-
+-struct vt8500_gpio_chip {
+-	struct gpio_chip	chip;
+-	unsigned int		shift;
+-	unsigned int		regoff;
+-};
+-
+-static int gpio_to_irq_map[8];
+-
+-static int vt8500_muxed_gpio_request(struct gpio_chip *chip,
+-				     unsigned offset)
+-{
+-	struct vt8500_gpio_chip *vt8500_chip = to_vt8500(chip);
+-	unsigned val = readl(regbase + ENABLE_REGS + vt8500_chip->regoff);
+-
+-	val |= (1 << vt8500_chip->shift << offset);
+-	writel(val, regbase + ENABLE_REGS + vt8500_chip->regoff);
+-
+-	return 0;
+-}
+-
+-static void vt8500_muxed_gpio_free(struct gpio_chip *chip,
+-				   unsigned offset)
+-{
+-	struct vt8500_gpio_chip *vt8500_chip = to_vt8500(chip);
+-	unsigned val = readl(regbase + ENABLE_REGS + vt8500_chip->regoff);
+-
+-	val &= ~(1 << vt8500_chip->shift << offset);
+-	writel(val, regbase + ENABLE_REGS + vt8500_chip->regoff);
+-}
+-
+-static int vt8500_muxed_gpio_direction_input(struct gpio_chip *chip,
+-				       unsigned offset)
+-{
+-	struct vt8500_gpio_chip *vt8500_chip = to_vt8500(chip);
+-	unsigned val = readl(regbase + DIRECTION_REGS + vt8500_chip->regoff);
+-
+-	val &= ~(1 << vt8500_chip->shift << offset);
+-	writel(val, regbase + DIRECTION_REGS + vt8500_chip->regoff);
+-
+-	return 0;
+-}
+-
+-static int vt8500_muxed_gpio_direction_output(struct gpio_chip *chip,
+-					unsigned offset, int value)
+-{
+-	struct vt8500_gpio_chip *vt8500_chip = to_vt8500(chip);
+-	unsigned val = readl(regbase + DIRECTION_REGS + vt8500_chip->regoff);
+-
+-	val |= (1 << vt8500_chip->shift << offset);
+-	writel(val, regbase + DIRECTION_REGS + vt8500_chip->regoff);
+-
+-	if (value) {
+-		val = readl(regbase + OUTVALUE_REGS + vt8500_chip->regoff);
+-		val |= (1 << vt8500_chip->shift << offset);
+-		writel(val, regbase + OUTVALUE_REGS + vt8500_chip->regoff);
+-	}
+-	return 0;
+-}
+-
+-static int vt8500_muxed_gpio_get_value(struct gpio_chip *chip,
+-				       unsigned offset)
+-{
+-	struct vt8500_gpio_chip *vt8500_chip = to_vt8500(chip);
+-
+-	return (readl(regbase + INVALUE_REGS + vt8500_chip->regoff)
+-		>> vt8500_chip->shift >> offset) & 1;
+-}
+-
+-static void vt8500_muxed_gpio_set_value(struct gpio_chip *chip,
+-					unsigned offset, int value)
+-{
+-	struct vt8500_gpio_chip *vt8500_chip = to_vt8500(chip);
+-	unsigned val = readl(regbase + INVALUE_REGS + vt8500_chip->regoff);
+-
+-	if (value)
+-		val |= (1 << vt8500_chip->shift << offset);
+-	else
+-		val &= ~(1 << vt8500_chip->shift << offset);
+-
+-	writel(val, regbase + INVALUE_REGS + vt8500_chip->regoff);
+-}
+-
+-#define VT8500_GPIO_BANK(__name, __shift, __off, __base, __num)		\
+-{									\
+-	.chip = {							\
+-		.label			= __name,			\
+-		.request		= vt8500_muxed_gpio_request,	\
+-		.free			= vt8500_muxed_gpio_free,	\
+-		.direction_input  = vt8500_muxed_gpio_direction_input,	\
+-		.direction_output = vt8500_muxed_gpio_direction_output,	\
+-		.get			= vt8500_muxed_gpio_get_value,	\
+-		.set			= vt8500_muxed_gpio_set_value,	\
+-		.can_sleep		= 0,				\
+-		.base			= __base,			\
+-		.ngpio			= __num,			\
+-	},								\
+-	.shift		= __shift,					\
+-	.regoff		= __off,					\
+-}
+-
+-static struct vt8500_gpio_chip vt8500_muxed_gpios[] = {
+-	VT8500_GPIO_BANK("uart0",	0,	0x0,	8,	4),
+-	VT8500_GPIO_BANK("uart1",	4,	0x0,	12,	4),
+-	VT8500_GPIO_BANK("spi0",	8,	0x0,	16,	4),
+-	VT8500_GPIO_BANK("spi1",	12,	0x0,	20,	4),
+-	VT8500_GPIO_BANK("spi2",	16,	0x0,	24,	4),
+-	VT8500_GPIO_BANK("pwmout",	24,	0x0,	28,	2),
+-
+-	VT8500_GPIO_BANK("sdmmc",	0,	0x4,	30,	11),
+-	VT8500_GPIO_BANK("ms",		16,	0x4,	41,	7),
+-	VT8500_GPIO_BANK("i2c0",	24,	0x4,	48,	2),
+-	VT8500_GPIO_BANK("i2c1",	26,	0x4,	50,	2),
+-
+-	VT8500_GPIO_BANK("mii",		0,	0x8,	52,	20),
+-	VT8500_GPIO_BANK("see",		20,	0x8,	72,	4),
+-	VT8500_GPIO_BANK("ide",		24,	0x8,	76,	7),
+-
+-	VT8500_GPIO_BANK("ccir",	0,	0xc,	83,	19),
+-
+-	VT8500_GPIO_BANK("ts",		8,	0x10,	102,	11),
+-
+-	VT8500_GPIO_BANK("lcd",		0,	0x14,	113,	23),
+-};
+-
+-static int vt8500_gpio_direction_input(struct gpio_chip *chip,
+-				       unsigned offset)
+-{
+-	unsigned val = readl(regbase + DIRECTION_REGS + EXT_REGOFF);
+-
+-	val &= ~(1 << offset);
+-	writel(val, regbase + DIRECTION_REGS + EXT_REGOFF);
+-	return 0;
+-}
+-
+-static int vt8500_gpio_direction_output(struct gpio_chip *chip,
+-					unsigned offset, int value)
+-{
+-	unsigned val = readl(regbase + DIRECTION_REGS + EXT_REGOFF);
+-
+-	val |= (1 << offset);
+-	writel(val, regbase + DIRECTION_REGS + EXT_REGOFF);
+-
+-	if (value) {
+-		val = readl(regbase + OUTVALUE_REGS + EXT_REGOFF);
+-		val |= (1 << offset);
+-		writel(val, regbase + OUTVALUE_REGS + EXT_REGOFF);
+-	}
+-	return 0;
+-}
+-
+-static int vt8500_gpio_get_value(struct gpio_chip *chip,
+-				       unsigned offset)
+-{
+-	return (readl(regbase + INVALUE_REGS + EXT_REGOFF) >> offset) & 1;
+-}
+-
+-static void vt8500_gpio_set_value(struct gpio_chip *chip,
+-					unsigned offset, int value)
+-{
+-	unsigned val = readl(regbase + OUTVALUE_REGS + EXT_REGOFF);
+-
+-	if (value)
+-		val |= (1 << offset);
+-	else
+-		val &= ~(1 << offset);
+-
+-	writel(val, regbase + OUTVALUE_REGS + EXT_REGOFF);
+-}
+-
+-static int vt8500_gpio_to_irq(struct gpio_chip *chip, unsigned offset)
+-{
+-	if (offset > 7)
+-		return -EINVAL;
+-
+-	return gpio_to_irq_map[offset];
+-}
+-
+-static struct gpio_chip vt8500_external_gpios = {
+-	.label			= "extgpio",
+-	.direction_input	= vt8500_gpio_direction_input,
+-	.direction_output	= vt8500_gpio_direction_output,
+-	.get			= vt8500_gpio_get_value,
+-	.set			= vt8500_gpio_set_value,
+-	.to_irq			= vt8500_gpio_to_irq,
+-	.can_sleep		= 0,
+-	.base			= 0,
+-	.ngpio			= 8,
+-};
+-
+-void __init vt8500_gpio_init(void)
+-{
+-	int i;
+-
+-	for (i = 0; i < 8; i++)
+-		gpio_to_irq_map[i] = wmt_gpio_ext_irq[i];
+-
+-	regbase = ioremap(wmt_gpio_base, SZ_64K);
+-	if (!regbase) {
+-		printk(KERN_ERR "Failed to map MMIO registers for GPIO\n");
+-		return;
+-	}
+-
+-	gpiochip_add(&vt8500_external_gpios);
+-
+-	for (i = 0; i < ARRAY_SIZE(vt8500_muxed_gpios); i++)
+-		gpiochip_add(&vt8500_muxed_gpios[i].chip);
+-}
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/gpio-vt8500.c linux-3.4/arch/arm/mach-vt8500/gpio-vt8500.c
+--- linux-3.4.orig/arch/arm/mach-vt8500/gpio-vt8500.c	1969-12-31 17:00:00.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/gpio-vt8500.c	2019-03-06 17:20:01.000000000 -0700
+@@ -0,0 +1,247 @@
++/* linux/arch/arm/mach-vt8500/gpio-vt8500.c
++ *
++ * Copyright (C) 2010 Alexey Charkov <alchark@gmail.com>
++ *
++ * This software is licensed under the terms of the GNU General Public
++ * License version 2, as published by the Free Software Foundation, and
++ * may be copied, distributed, and modified under those terms.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ */
++
++#include <linux/gpio.h>
++#include <linux/init.h>
++#include <linux/irq.h>
++#include <linux/io.h>
++
++#include "devices.h"
++
++#define to_vt8500(__chip) container_of(__chip, struct vt8500_gpio_chip, chip)
++
++#define ENABLE_REGS	0x0
++#define DIRECTION_REGS	0x20
++#define OUTVALUE_REGS	0x40
++#define INVALUE_REGS	0x60
++
++#define EXT_REGOFF	0x1c
++
++static void __iomem *regbase;
++
++struct vt8500_gpio_chip {
++	struct gpio_chip	chip;
++	unsigned int		shift;
++	unsigned int		regoff;
++};
++
++static int gpio_to_irq_map[8];
++
++static int vt8500_muxed_gpio_request(struct gpio_chip *chip,
++				     unsigned offset)
++{
++	struct vt8500_gpio_chip *vt8500_chip = to_vt8500(chip);
++	unsigned val = readl(regbase + ENABLE_REGS + vt8500_chip->regoff);
++
++	val |= (1 << vt8500_chip->shift << offset);
++	writel(val, regbase + ENABLE_REGS + vt8500_chip->regoff);
++
++	return 0;
++}
++
++static void vt8500_muxed_gpio_free(struct gpio_chip *chip,
++				   unsigned offset)
++{
++	struct vt8500_gpio_chip *vt8500_chip = to_vt8500(chip);
++	unsigned val = readl(regbase + ENABLE_REGS + vt8500_chip->regoff);
++
++	val &= ~(1 << vt8500_chip->shift << offset);
++	writel(val, regbase + ENABLE_REGS + vt8500_chip->regoff);
++}
++
++static int vt8500_muxed_gpio_direction_input(struct gpio_chip *chip,
++				       unsigned offset)
++{
++	struct vt8500_gpio_chip *vt8500_chip = to_vt8500(chip);
++	unsigned val = readl(regbase + DIRECTION_REGS + vt8500_chip->regoff);
++
++	val &= ~(1 << vt8500_chip->shift << offset);
++	writel(val, regbase + DIRECTION_REGS + vt8500_chip->regoff);
++
++	return 0;
++}
++
++static int vt8500_muxed_gpio_direction_output(struct gpio_chip *chip,
++					unsigned offset, int value)
++{
++	struct vt8500_gpio_chip *vt8500_chip = to_vt8500(chip);
++	unsigned val = readl(regbase + DIRECTION_REGS + vt8500_chip->regoff);
++
++	val |= (1 << vt8500_chip->shift << offset);
++	writel(val, regbase + DIRECTION_REGS + vt8500_chip->regoff);
++
++	if (value) {
++		val = readl(regbase + OUTVALUE_REGS + vt8500_chip->regoff);
++		val |= (1 << vt8500_chip->shift << offset);
++		writel(val, regbase + OUTVALUE_REGS + vt8500_chip->regoff);
++	}
++	return 0;
++}
++
++static int vt8500_muxed_gpio_get_value(struct gpio_chip *chip,
++				       unsigned offset)
++{
++	struct vt8500_gpio_chip *vt8500_chip = to_vt8500(chip);
++
++	return (readl(regbase + INVALUE_REGS + vt8500_chip->regoff)
++		>> vt8500_chip->shift >> offset) & 1;
++}
++
++static void vt8500_muxed_gpio_set_value(struct gpio_chip *chip,
++					unsigned offset, int value)
++{
++	struct vt8500_gpio_chip *vt8500_chip = to_vt8500(chip);
++	unsigned val = readl(regbase + OUTVALUE_REGS + vt8500_chip->regoff);
++
++	if (value)
++		val |= (1 << vt8500_chip->shift << offset);
++	else
++		val &= ~(1 << vt8500_chip->shift << offset);
++
++	writel(val, regbase + OUTVALUE_REGS + vt8500_chip->regoff);
++}
++
++#define VT8500_GPIO_BANK(__name, __shift, __off, __base, __num)		\
++{									\
++	.chip = {							\
++		.label			= __name,			\
++		.request		= vt8500_muxed_gpio_request,	\
++		.free			= vt8500_muxed_gpio_free,	\
++		.direction_input  = vt8500_muxed_gpio_direction_input,	\
++		.direction_output = vt8500_muxed_gpio_direction_output,	\
++		.get			= vt8500_muxed_gpio_get_value,	\
++		.set			= vt8500_muxed_gpio_set_value,	\
++		.can_sleep		= 0,				\
++		.base			= __base,			\
++		.ngpio			= __num,			\
++	},								\
++	.shift		= __shift,					\
++	.regoff		= __off,					\
++}
++
++static struct vt8500_gpio_chip vt8500_muxed_gpios[] = {
++	VT8500_GPIO_BANK("uart0",	0,	0x0,	8,	4),
++	VT8500_GPIO_BANK("uart1",	4,	0x0,	12,	4),
++	VT8500_GPIO_BANK("spi0",	8,	0x0,	16,	4),
++	VT8500_GPIO_BANK("spi1",	12,	0x0,	20,	4),
++	VT8500_GPIO_BANK("spi2",	16,	0x0,	24,	4),
++	VT8500_GPIO_BANK("pwmout",	24,	0x0,	28,	2),
++
++	VT8500_GPIO_BANK("sdmmc",	0,	0x4,	30,	11),
++	VT8500_GPIO_BANK("ms",		16,	0x4,	41,	7),
++	VT8500_GPIO_BANK("i2c0",	24,	0x4,	48,	2),
++	VT8500_GPIO_BANK("i2c1",	26,	0x4,	50,	2),
++
++	VT8500_GPIO_BANK("mii",		0,	0x8,	52,	20),
++	VT8500_GPIO_BANK("see",		20,	0x8,	72,	4),
++	VT8500_GPIO_BANK("ide",		24,	0x8,	76,	7),
++
++	VT8500_GPIO_BANK("ccir",	0,	0xc,	83,	19),
++
++	VT8500_GPIO_BANK("ts",		8,	0x10,	102,	11),
++
++	VT8500_GPIO_BANK("lcd",		0,	0x14,	113,	23),
++};
++
++static int vt8500_gpio_direction_input(struct gpio_chip *chip,
++				       unsigned offset)
++{
++	unsigned val = readl(regbase + DIRECTION_REGS + EXT_REGOFF);
++
++	val &= ~(1 << offset);
++	writel(val, regbase + DIRECTION_REGS + EXT_REGOFF);
++	return 0;
++}
++
++static int vt8500_gpio_direction_output(struct gpio_chip *chip,
++					unsigned offset, int value)
++{
++	unsigned val = readl(regbase + DIRECTION_REGS + EXT_REGOFF);
++
++	val |= (1 << offset);
++	writel(val, regbase + DIRECTION_REGS + EXT_REGOFF);
++
++	if (value) {
++		val = readl(regbase + OUTVALUE_REGS + EXT_REGOFF);
++		val |= (1 << offset);
++		writel(val, regbase + OUTVALUE_REGS + EXT_REGOFF);
++	}
++	return 0;
++}
++
++static int vt8500_gpio_get_value(struct gpio_chip *chip,
++				       unsigned offset)
++{
++	return (readl(regbase + INVALUE_REGS + EXT_REGOFF) >> offset) & 1;
++}
++
++static void vt8500_gpio_set_value(struct gpio_chip *chip,
++					unsigned offset, int value)
++{
++	unsigned val = readl(regbase + OUTVALUE_REGS + EXT_REGOFF);
++
++	if (value)
++		val |= (1 << offset);
++	else
++		val &= ~(1 << offset);
++
++	writel(val, regbase + OUTVALUE_REGS + EXT_REGOFF);
++}
++
++static int vt8500_gpio_to_irq(struct gpio_chip *chip, unsigned offset)
++{
++	if (offset > 7)
++		return -EINVAL;
++
++	return gpio_to_irq_map[offset];
++}
++
++static struct gpio_chip vt8500_external_gpios = {
++	.label			= "extgpio",
++	.direction_input	= vt8500_gpio_direction_input,
++	.direction_output	= vt8500_gpio_direction_output,
++	.get			= vt8500_gpio_get_value,
++	.set			= vt8500_gpio_set_value,
++	.to_irq			= vt8500_gpio_to_irq,
++	.can_sleep		= 0,
++	.base			= 0,
++	.ngpio			= 8,
++};
++
++void __init vt8500_gpio_init(void)
++{
++	int i;
++
++	for (i = 0; i < 8; i++)
++		gpio_to_irq_map[i] = wmt_gpio_ext_irq[i];
++
++	regbase = ioremap(wmt_gpio_base, SZ_64K);
++	if (!regbase) {
++		printk(KERN_ERR "Failed to map MMIO registers for GPIO\n");
++		return;
++	}
++	/*
++	 * Ensure that all muxed pins are initialized in non-gpio state until
++	 * requested otherwise
++	 */
++	for (i = 0; i <= 0x14; i += 4)
++		writel(0, regbase + ENABLE_REGS + i);
++
++
++	gpiochip_add(&vt8500_external_gpios);
++
++	for (i = 0; i < ARRAY_SIZE(vt8500_muxed_gpios); i++)
++		gpiochip_add(&vt8500_muxed_gpios[i].chip);
++}
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/gpio-wm8505.c linux-3.4/arch/arm/mach-vt8500/gpio-wm8505.c
+--- linux-3.4.orig/arch/arm/mach-vt8500/gpio-wm8505.c	1969-12-31 17:00:00.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/gpio-wm8505.c	2019-03-06 17:20:01.000000000 -0700
+@@ -0,0 +1,356 @@
++/* linux/arch/arm/mach-wm8505/gpio-wm8505.c
++ *
++ * Copyright (C) 2010 Alexey Charkov <alchark@gmail.com>
++ * Copyright (C) 2011 Tony Prisk <linux@prisktech.co.nz>
++ *
++ * This software is licensed under the terms of the GNU General Public
++ * License version 2, as published by the Free Software Foundation, and
++ * may be copied, distributed, and modified under those terms.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ */
++
++#include <linux/gpio.h>
++#include <linux/init.h>
++#include <linux/irq.h>
++#include <linux/io.h>
++
++#include "devices.h"
++
++#define to_wm8505(__chip) container_of(__chip, struct wm8505_gpio_chip, chip)
++
++#define ENABLE_REGS	0x40
++#define DIRECTION_REGS	0x68
++#define OUTVALUE_REGS	0x90
++#define INVALUE_REGS	0xB8
++
++#define ENABLE2_REGS	0x00
++#define DIRECTION2_REGS	0x04
++#define OUTVALUE2_REGS	0x08
++#define INVALUE2_REGS	0x0C
++
++#define EXT_REGOFF	0x24
++
++static void __iomem *regbase;
++
++struct wm8505_gpio_chip {
++	struct gpio_chip	chip;
++	unsigned int		shift;
++	unsigned int		regoff;
++};
++
++static int gpio_to_irq_map[8];
++
++static int wm8505_muxed2_gpio_request(struct gpio_chip *chip,
++				     unsigned offset)
++{
++	struct wm8505_gpio_chip *wm8505_chip = to_wm8505(chip);
++	unsigned val = readl(regbase + ENABLE2_REGS + wm8505_chip->regoff);
++
++	val |= (1 << wm8505_chip->shift << offset);
++	writel(val, regbase + ENABLE2_REGS + wm8505_chip->regoff);
++
++	return 0;
++}
++
++static void wm8505_muxed2_gpio_free(struct gpio_chip *chip,
++				   unsigned offset)
++{
++	struct wm8505_gpio_chip *wm8505_chip = to_wm8505(chip);
++	unsigned val = readl(regbase + ENABLE2_REGS + wm8505_chip->regoff);
++
++	val &= ~(1 << wm8505_chip->shift << offset);
++	writel(val, regbase + ENABLE2_REGS + wm8505_chip->regoff);
++}
++
++static int wm8505_muxed2_gpio_direction_input(struct gpio_chip *chip,
++				       unsigned offset)
++{
++	struct wm8505_gpio_chip *wm8505_chip = to_wm8505(chip);
++	unsigned val = readl(regbase + DIRECTION2_REGS + wm8505_chip->regoff);
++
++	val &= ~(1 << wm8505_chip->shift << offset);
++	writel(val, regbase + DIRECTION2_REGS + wm8505_chip->regoff);
++
++	return 0;
++}
++
++static int wm8505_muxed2_gpio_direction_output(struct gpio_chip *chip,
++					unsigned offset, int value)
++{
++	struct wm8505_gpio_chip *wm8505_chip = to_wm8505(chip);
++	unsigned val = readl(regbase + DIRECTION2_REGS + wm8505_chip->regoff);
++
++	val |= (1 << wm8505_chip->shift << offset);
++	writel(val, regbase + DIRECTION2_REGS + wm8505_chip->regoff);
++
++	if (value) {
++		val = readl(regbase + OUTVALUE2_REGS + wm8505_chip->regoff);
++		val |= (1 << wm8505_chip->shift << offset);
++		writel(val, regbase + OUTVALUE2_REGS + wm8505_chip->regoff);
++	}
++	return 0;
++}
++
++static int wm8505_muxed2_gpio_get_value(struct gpio_chip *chip,
++				       unsigned offset)
++{
++	struct wm8505_gpio_chip *wm8505_chip = to_wm8505(chip);
++
++	return (readl(regbase + INVALUE2_REGS + wm8505_chip->regoff)
++		>> wm8505_chip->shift >> offset) & 1;
++}
++
++static void wm8505_muxed2_gpio_set_value(struct gpio_chip *chip,
++					unsigned offset, int value)
++{
++	struct wm8505_gpio_chip *wm8505_chip = to_wm8505(chip);
++	unsigned val = readl(regbase + OUTVALUE2_REGS + wm8505_chip->regoff);
++
++	if (value)
++		val |= (1 << wm8505_chip->shift << offset);
++	else
++		val &= ~(1 << wm8505_chip->shift << offset);
++
++	writel(val, regbase + OUTVALUE2_REGS + wm8505_chip->regoff);
++}
++
++#define WM8505_GPIO_BANK2(__name, __shift, __off, __base, __num)		\
++{										\
++	.chip = {								\
++		.label			= __name,				\
++		.request		= wm8505_muxed2_gpio_request,		\
++		.free			= wm8505_muxed2_gpio_free,		\
++		.direction_input  	= wm8505_muxed2_gpio_direction_input,	\
++		.direction_output 	= wm8505_muxed2_gpio_direction_output,	\
++		.get			= wm8505_muxed2_gpio_get_value,		\
++		.set			= wm8505_muxed2_gpio_set_value,		\
++		.can_sleep		= 0,					\
++		.base			= __base,				\
++		.ngpio			= __num,				\
++	},									\
++	.shift		= __shift,						\
++	.regoff		= __off,						\
++}
++
++static int wm8505_muxed_gpio_request(struct gpio_chip *chip,
++				     unsigned offset)
++{
++	struct wm8505_gpio_chip *wm8505_chip = to_wm8505(chip);
++	unsigned val = readl(regbase + ENABLE_REGS + wm8505_chip->regoff);
++
++	val |= (1 << wm8505_chip->shift << offset);
++	writel(val, regbase + ENABLE_REGS + wm8505_chip->regoff);
++
++	return 0;
++}
++
++static void wm8505_muxed_gpio_free(struct gpio_chip *chip,
++				   unsigned offset)
++{
++	struct wm8505_gpio_chip *wm8505_chip = to_wm8505(chip);
++	unsigned val = readl(regbase + ENABLE_REGS + wm8505_chip->regoff);
++
++	val &= ~(1 << wm8505_chip->shift << offset);
++	writel(val, regbase + ENABLE_REGS + wm8505_chip->regoff);
++}
++
++static int wm8505_muxed_gpio_direction_input(struct gpio_chip *chip,
++				       unsigned offset)
++{
++	struct wm8505_gpio_chip *wm8505_chip = to_wm8505(chip);
++	unsigned val = readl(regbase + DIRECTION_REGS + wm8505_chip->regoff);
++
++	val &= ~(1 << wm8505_chip->shift << offset);
++	writel(val, regbase + DIRECTION_REGS + wm8505_chip->regoff);
++
++	return 0;
++}
++
++static int wm8505_muxed_gpio_direction_output(struct gpio_chip *chip,
++					unsigned offset, int value)
++{
++	struct wm8505_gpio_chip *wm8505_chip = to_wm8505(chip);
++	unsigned val = readl(regbase + DIRECTION_REGS + wm8505_chip->regoff);
++
++	val |= (1 << wm8505_chip->shift << offset);
++	writel(val, regbase + DIRECTION_REGS + wm8505_chip->regoff);
++
++	if (value) {
++		val = readl(regbase + OUTVALUE_REGS + wm8505_chip->regoff);
++		val |= (1 << wm8505_chip->shift << offset);
++		writel(val, regbase + OUTVALUE_REGS + wm8505_chip->regoff);
++	}
++	return 0;
++}
++
++static int wm8505_muxed_gpio_get_value(struct gpio_chip *chip,
++				       unsigned offset)
++{
++	struct wm8505_gpio_chip *wm8505_chip = to_wm8505(chip);
++
++	return (readl(regbase + INVALUE_REGS + wm8505_chip->regoff)
++		>> wm8505_chip->shift >> offset) & 1;
++}
++
++static void wm8505_muxed_gpio_set_value(struct gpio_chip *chip,
++					unsigned offset, int value)
++{
++	struct wm8505_gpio_chip *wm8505_chip = to_wm8505(chip);
++	unsigned val = readl(regbase + OUTVALUE_REGS + wm8505_chip->regoff);
++
++	if (value)
++		val |= (1 << wm8505_chip->shift << offset);
++	else
++		val &= ~(1 << wm8505_chip->shift << offset);
++
++	writel(val, regbase + OUTVALUE_REGS + wm8505_chip->regoff);
++}
++
++#define WM8505_GPIO_BANK(__name, __shift, __off, __base, __num)		\
++{									\
++	.chip = {							\
++		.label			= __name,			\
++		.request		= wm8505_muxed_gpio_request,	\
++		.free			= wm8505_muxed_gpio_free,	\
++		.direction_input  = wm8505_muxed_gpio_direction_input,	\
++		.direction_output = wm8505_muxed_gpio_direction_output,	\
++		.get			= wm8505_muxed_gpio_get_value,	\
++		.set			= wm8505_muxed_gpio_set_value,	\
++		.can_sleep		= 0,				\
++		.base			= __base,			\
++		.ngpio			= __num,			\
++	},								\
++	.shift		= __shift,					\
++	.regoff		= __off,					\
++}
++
++static struct wm8505_gpio_chip wm8505_muxed_gpios[] = {
++	WM8505_GPIO_BANK("sdmmc",	0,	0x0,	8,	8),
++
++	WM8505_GPIO_BANK("vdout",	8,	0x04,	16,	24),
++	WM8505_GPIO_BANK("vdin",	0,	0x04,	40,	8),
++
++	WM8505_GPIO_BANK("sync",	0,	0x08,	48,	6),
++
++	WM8505_GPIO_BANK("nord",	0,	0x0C,	54,	16),
++
++	WM8505_GPIO_BANK("nora",	0,	0x10,	70,	5),
++
++	WM8505_GPIO_BANK("ac97",	0,	0x14,	75,	5),
++
++	WM8505_GPIO_BANK("spiflash",	0,	0x18,	80,	5),
++
++	WM8505_GPIO_BANK("spi0",	0,	0x1C,	85,	4),
++	WM8505_GPIO_BANK("spi1",	4,	0x1C,	89,	4),
++	WM8505_GPIO_BANK("spi2",	8,	0x1C,	93,	4),
++
++	WM8505_GPIO_BANK("uart0",	0,	0x20,	97,	4),
++	WM8505_GPIO_BANK("uart1",	4,	0x20,	101,	4),
++	WM8505_GPIO_BANK("uart2",	8,	0x20,	105,	4),
++	WM8505_GPIO_BANK("uart3",	12,	0x20,	109,	4),
++
++	WM8505_GPIO_BANK("wakeup",	16,	0x24,	113,	4),
++	WM8505_GPIO_BANK("usbsus",	21,	0x24,	117,	1),
++
++	WM8505_GPIO_BANK2("pwmout",	4,	0x500,	118,	2),
++	WM8505_GPIO_BANK2("i2c0",	2,	0x500,	120,	2),
++	WM8505_GPIO_BANK2("i2c1",	2,	0x500,	122,	2),
++};
++
++static int wm8505_gpio_direction_input(struct gpio_chip *chip,
++				       unsigned offset)
++{
++	unsigned val = readl(regbase + DIRECTION_REGS + EXT_REGOFF);
++
++	val &= ~(1 << offset);
++	writel(val, regbase + DIRECTION_REGS + EXT_REGOFF);
++	return 0;
++}
++
++static int wm8505_gpio_direction_output(struct gpio_chip *chip,
++					unsigned offset, int value)
++{
++	unsigned val = readl(regbase + DIRECTION_REGS + EXT_REGOFF);
++
++	val |= (1 << offset);
++	writel(val, regbase + DIRECTION_REGS + EXT_REGOFF);
++
++	if (value) {
++		val = readl(regbase + OUTVALUE_REGS + EXT_REGOFF);
++		val |= (1 << offset);
++		writel(val, regbase + OUTVALUE_REGS + EXT_REGOFF);
++	}
++	return 0;
++}
++
++static int wm8505_gpio_get_value(struct gpio_chip *chip,
++				       unsigned offset)
++{
++	u32 reg_tmp;
++	reg_tmp = readl(regbase + INVALUE_REGS + EXT_REGOFF);
++	return (reg_tmp >> offset) & 1;
++}
++
++static void wm8505_gpio_set_value(struct gpio_chip *chip,
++					unsigned offset, int value)
++{
++	unsigned val = readl(regbase + OUTVALUE_REGS + EXT_REGOFF);
++
++	if (value)
++		val |= (1 << offset);
++	else
++		val &= ~(1 << offset);
++
++	writel(val, regbase + OUTVALUE_REGS + EXT_REGOFF);
++}
++
++static int wm8505_gpio_to_irq(struct gpio_chip *chip, unsigned offset)
++{
++	if (offset > 7)
++		return -EINVAL;
++
++	return gpio_to_irq_map[offset];
++}
++
++static struct gpio_chip wm8505_external_gpios = {
++	.label			= "extgpio",
++	.direction_input	= wm8505_gpio_direction_input,
++	.direction_output	= wm8505_gpio_direction_output,
++	.get				= wm8505_gpio_get_value,
++	.set				= wm8505_gpio_set_value,
++	.to_irq			= wm8505_gpio_to_irq,
++	.can_sleep		= 0,
++	.base			= 0,
++	.ngpio			= 8,
++};
++
++void __init wm8505_gpio_init(void)
++{
++	int i;
++
++	for (i = 0; i < 8; i++)
++		gpio_to_irq_map[i] = wmt_gpio_ext_irq[i];
++
++	regbase = ioremap(wmt_gpio_base, SZ_64K);
++	if (!regbase) {
++		printk(KERN_ERR "Failed to map MMIO registers for GPIO\n");
++		return;
++	}
++	/*
++	 * Ensure that all muxed pins are initialized in non-gpio state until
++	 * requested otherwise
++	 */
++	writel(0, regbase + 0x500);
++	for (i = 0; i <= 0x24; i += 4)
++		writel(0, regbase + ENABLE_REGS + i);
++
++	gpiochip_add(&wm8505_external_gpios);
++
++	for (i = 0; i < ARRAY_SIZE(wm8505_muxed_gpios); i++)
++		gpiochip_add(&wm8505_muxed_gpios[i].chip);
++}
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/gpio-wm8650.c linux-3.4/arch/arm/mach-vt8500/gpio-wm8650.c
+--- linux-3.4.orig/arch/arm/mach-vt8500/gpio-wm8650.c	1969-12-31 17:00:00.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/gpio-wm8650.c	2019-03-06 17:20:01.000000000 -0700
+@@ -0,0 +1,197 @@
++/* linux/arch/arm/mach-vt8500/gpio-wm8650.c
++ *
++ * Copyright (C) 2010 Alexey Charkov <alchark@gmail.com>
++ * Copyright (C) 2011 Tony Prisk <linux@prisktech.co.nz>
++ *
++ * This software is licensed under the terms of the GNU General Public
++ * License version 2, as published by the Free Software Foundation, and
++ * may be copied, distributed, and modified under those terms.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ */
++
++#include <linux/gpio.h>
++#include <linux/init.h>
++#include <linux/irq.h>
++#include <linux/io.h>
++
++#include "devices.h"
++
++#define to_wm8650(__chip) container_of(__chip, struct wm8650_gpio_chip, chip)
++
++#define ENABLE_REGS	0x40
++#define DIRECTION_REGS	0x80
++#define OUTVALUE_REGS	0xC0
++#define INVALUE_REGS	0x00
++
++#define EXT_REGOFF	0x24
++
++static void __iomem *regbase;
++
++struct wm8650_gpio_chip {
++	struct gpio_chip	chip;
++	unsigned int		shift;
++	unsigned int		regoff;
++};
++
++static int gpio_to_irq_map[8];
++
++static int wm8650_muxed_gpio_request(struct gpio_chip *chip,
++				     unsigned offset)
++{
++	struct wm8650_gpio_chip *wm8650_chip = to_wm8650(chip);
++	unsigned val = readl(regbase + ENABLE_REGS + wm8650_chip->regoff);
++
++	val |= (1 << wm8650_chip->shift << offset);
++	writel(val, regbase + ENABLE_REGS + wm8650_chip->regoff);
++
++	return 0;
++}
++
++static void wm8650_muxed_gpio_free(struct gpio_chip *chip,
++				   unsigned offset)
++{
++	struct wm8650_gpio_chip *wm8650_chip = to_wm8650(chip);
++	unsigned val = readl(regbase + ENABLE_REGS + wm8650_chip->regoff);
++
++	val &= ~(1 << wm8650_chip->shift << offset);
++	writel(val, regbase + ENABLE_REGS + wm8650_chip->regoff);
++}
++
++static int wm8650_muxed_gpio_direction_input(struct gpio_chip *chip,
++				       unsigned offset)
++{
++	struct wm8650_gpio_chip *wm8650_chip = to_wm8650(chip);
++	unsigned val = readl(regbase + DIRECTION_REGS + wm8650_chip->regoff);
++
++	val &= ~(1 << wm8650_chip->shift << offset);
++	writel(val, regbase + DIRECTION_REGS + wm8650_chip->regoff);
++
++	return 0;
++}
++
++static int wm8650_muxed_gpio_direction_output(struct gpio_chip *chip,
++					unsigned offset, int value)
++{
++	struct wm8650_gpio_chip *wm8650_chip = to_wm8650(chip);
++	unsigned val = readl(regbase + DIRECTION_REGS + wm8650_chip->regoff);
++
++	val |= (1 << wm8650_chip->shift << offset);
++	writel(val, regbase + DIRECTION_REGS + wm8650_chip->regoff);
++
++	if (value) {
++		val = readl(regbase + OUTVALUE_REGS + wm8650_chip->regoff);
++		val |= (1 << wm8650_chip->shift << offset);
++		writel(val, regbase + OUTVALUE_REGS + wm8650_chip->regoff);
++	}
++	return 0;
++}
++
++static int wm8650_muxed_gpio_get_value(struct gpio_chip *chip,
++				       unsigned offset)
++{
++	struct wm8650_gpio_chip *wm8650_chip = to_wm8650(chip);
++
++	return (readl(regbase + INVALUE_REGS + wm8650_chip->regoff)
++		>> wm8650_chip->shift >> offset) & 1;
++}
++
++static void wm8650_muxed_gpio_set_value(struct gpio_chip *chip,
++					unsigned offset, int value)
++{
++	struct wm8650_gpio_chip *wm8650_chip = to_wm8650(chip);
++	unsigned val = readl(regbase + OUTVALUE_REGS + wm8650_chip->regoff);
++
++	if (value)
++		val |= (1 << wm8650_chip->shift << offset);
++	else
++		val &= ~(1 << wm8650_chip->shift << offset);
++
++	writel(val, regbase + OUTVALUE_REGS + wm8650_chip->regoff);
++}
++
++#define WM8650_GPIO_BANK(__name, __shift, __off, __base, __num)		\
++{									\
++	.chip = {							\
++		.label			= __name,			\
++		.request		= wm8650_muxed_gpio_request,	\
++		.free			= wm8650_muxed_gpio_free,	\
++		.direction_input  = wm8650_muxed_gpio_direction_input,	\
++		.direction_output = wm8650_muxed_gpio_direction_output,	\
++		.get			= wm8650_muxed_gpio_get_value,	\
++		.set			= wm8650_muxed_gpio_set_value,	\
++		.can_sleep		= 0,				\
++		.base			= __base,			\
++		.ngpio			= __num,			\
++	},								\
++	.shift		= __shift,					\
++	.regoff		= __off,					\
++}
++
++static struct wm8650_gpio_chip wm8650_muxed_gpios[] = {
++	WM8650_GPIO_BANK("vdout",	0,	0x04,	8,	24),
++	WM8650_GPIO_BANK("vdin",	0,	0x08,	32,	8),
++	WM8650_GPIO_BANK("uart0",	0,	0x16,	40,	4),
++	WM8650_GPIO_BANK("uart1",	4,	0x16,	44,	4),
++	WM8650_GPIO_BANK("uart2",	8,	0x16,	48,	4),
++	WM8650_GPIO_BANK("uart3",	12,	0x16,	52,	4),
++	WM8650_GPIO_BANK("sdmmc",	16,	0x0C,	56,	7),
++	WM8650_GPIO_BANK("nand0",	24,	0x0C,	63,	8),
++	WM8650_GPIO_BANK("nand1",	0,	0x10,	71,	8),
++	WM8650_GPIO_BANK("spiflash",	16,	0x1C,	79,	5),
++};
++
++
++static int wm8650_gpio_to_irq(struct gpio_chip *chip, unsigned offset)
++{
++	if (offset > 7)
++		return -EINVAL;
++
++	return gpio_to_irq_map[offset];
++}
++
++static struct wm8650_gpio_chip wm8650_external_gpios = {
++	.chip = {
++		.label			= "extgpio",
++		.direction_input	= wm8650_muxed_gpio_direction_input,
++		.direction_output	= wm8650_muxed_gpio_direction_output,
++		.get			= wm8650_muxed_gpio_get_value,
++		.set			= wm8650_muxed_gpio_set_value,
++		.to_irq			= wm8650_gpio_to_irq,
++		.can_sleep		= 0,
++		.base			= 0,
++		.ngpio			= 8,
++	},
++	.shift		= 0,
++	.regoff		= 0,
++};
++
++void __init wm8650_gpio_init(void)
++{
++	int i;
++
++	for (i = 0; i < 8; i++)
++		gpio_to_irq_map[i] = wmt_gpio_ext_irq[i];
++
++	regbase = ioremap(wmt_gpio_base, SZ_64K);
++	if (!regbase) {
++		printk(KERN_ERR "Failed to map MMIO registers for GPIO\n");
++		return;
++	}
++	/*
++	 * Ensure that all muxed pins are initialized in non-gpio state until
++	 * requested otherwise. We enable all extgpio pins.
++	 */
++	writel(0x000000FF, regbase + ENABLE_REGS); // extgpio are 1, rest 0
++	for (i = 4; i <= 0x1c; i += 4)
++		writel(0, regbase + ENABLE_REGS + i);
++
++	gpiochip_add(&wm8650_external_gpios.chip);
++
++	for (i = 0; i < ARRAY_SIZE(wm8650_muxed_gpios); i++)
++		gpiochip_add(&wm8650_muxed_gpios[i].chip);
++}
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/include/mach/wm8650_irqs.h linux-3.4/arch/arm/mach-vt8500/include/mach/wm8650_irqs.h
+--- linux-3.4.orig/arch/arm/mach-vt8500/include/mach/wm8650_irqs.h	1969-12-31 17:00:00.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/include/mach/wm8650_irqs.h	2019-03-06 17:20:01.000000000 -0700
+@@ -0,0 +1,120 @@
++/*
++ *  Copyright (C) 2011 Alexey Charkov <alchark@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++/* WM8650 Interrupt Sources */
++
++/* Interrupt Controller 0 */
++#define IRQ_SDMMC1	0
++#define IRQ_SDMMC1_DMA	1
++#define IRQ_APBB	2
++#define IRQ_ATA		3
++#define IRQ_SMC		4
++#define IRQ_DSP		5
++#define IRQ_GPIO	6
++#define IRQ_XD		7
++#define IRQ_XD_DMA	8
++#define IRQ_LCD		9
++#define IRQ_ETHER	10
++#define IRQ_DMA0	11
++#define IRQ_DMA1	12
++#define IRQ_DMA2	13
++#define IRQ_DMA3	14
++#define IRQ_DMA4	15
++#define IRQ_DMA5	16
++#define IRQ_DMA6	17
++#define IRQ_ETHER1	17	/* from vendor's fake PCI bus config space */
++#define IRQ_DMA7	18
++#define IRQ_I2C0	19
++#define IRQ_SDMMC	20
++#define IRQ_SDMMC_DMA	21
++#define IRQ_PMC_WU	22
++#define IRQ_KEYPAD	23
++#define IRQ_SPI0	24
++#define IRQ_ROT		25
++#define IRQ_SUS_GPIO0	26
++#define IRQ_SUS_GPIO1	27
++#define IRQ_NAND	28
++#define IRQ_NAND_DMA	29
++#define IRQ_MSC		30
++#define IRQ_MSC_DMA	31
++#define IRQ_UART0	32
++#define IRQ_UART1	33
++#define IRQ_I2C1	34      /* I2S controller                   */
++/* Reserved		35 */
++#define IRQ_PMCOS0	36      /* OS Timer match 0                 */
++#define IRQ_PMCOS1	37      /* OS Timer match 1                 */
++#define IRQ_PMCOS2	38      /* OS Timer match 2                 */
++#define IRQ_PMCOS3	39      /* OS Timer match 3                 */
++/* Reserved		40  */
++/* Reserved		41  */
++/* Reserved		42  */
++#define IRQ_EHCI	43
++#define IRQ_UHCI	43
++#define IRQ_DMA8	44
++#define IRQ_DMA9	45
++#define IRQ_DMA10	46
++#define IRQ_DMA11	47
++#define IRQ_RTC		48
++#define IRQ_RTCSM	49
++#define IRQ_DMA12	50
++#define IRQ_DMA13	51
++#define IRQ_DMA14	52
++#define IRQ_DMA15	53
++/* Reserved		54  */
++#define IRQ_CIR		55
++#define IRQ_SIC0	56
++#define IRQ_SIC1	57
++#define IRQ_SIC2	58
++#define IRQ_SIC3	59
++#define IRQ_SIC4	60
++#define IRQ_SIC5	61
++#define IRQ_SIC6	62
++#define IRQ_SIC7	63
++
++/* Interrupt Controller 1 */
++#define IRQ_VPP0	64
++#define IRQ_VPP1	65
++#define IRQ_VPP2	66
++#define IRQ_VPP3	67
++#define IRQ_VPP4	68
++#define IRQ_VPP5	69
++#define IRQ_VPP6	70
++#define IRQ_VPP7	71
++#define IRQ_VPP8	72
++#define IRQ_VPP9	73
++#define IRQ_VPP10	74
++#define IRQ_VPP11	75
++#define IRQ_VPP12	76
++#define IRQ_VPP13	77
++#define IRQ_VPP14	78
++#define IRQ_VPP15	79
++#define IRQ_VPP16	80 	/* NA12								*/
++#define IRQ_VPP17	81 	/* NA12								*/
++#define IRQ_VPP18	82 	/* NA12								*/
++#define IRQ_DZ_0	83		/*AUDPRF*/
++#define IRQ_DZ_1	84
++#define IRQ_DZ_2	85
++#define IRQ_DZ_3	86
++#define IRQ_DZ_4	87
++#define IRQ_DZ_5	88
++#define IRQ_DZ_6	89
++#define IRQ_DZ_7	90
++#define IRQ_DZ_8	91
++/* Reserved		92 ~ 127 */
++
++#define WM8650_NR_IRQS	91
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/include/mach/wm8650_regs.h linux-3.4/arch/arm/mach-vt8500/include/mach/wm8650_regs.h
+--- linux-3.4.orig/arch/arm/mach-vt8500/include/mach/wm8650_regs.h	1969-12-31 17:00:00.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/include/mach/wm8650_regs.h	2019-03-06 17:20:01.000000000 -0700
+@@ -0,0 +1,121 @@
++/*
++ *  Copyright (C) 2010 Alexey Charkov <alchark@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++#ifndef __ASM_ARM_ARCH_WM8650_REGS_H
++#define __ASM_ARM_ARCH_WM8650_REGS_H
++
++/* WM8650 Registers Map */
++
++#define WM8650_REGS_START_PHYS	0xd8000000	/* Start of MMIO registers */
++#define WM8650_REGS_START_VIRT	0xf8000000	/* Virtual mapping start */
++
++/* AHB Slaves */
++
++#define WM8650_DDR_BASE		0xd8000400	/* 1k	DDR/DDR2 Memory
++							Controller */
++#define WM8650_DMA_BASE		0xd8001800	/* 1k	DMA Controller */
++#define WM8650_VDMA_BASE	0xd8001c00	/* 1k	VDMA ("Pictor"?) */
++#define WM8650_SFLASH_BASE	0xd8002000	/* 1k	Serial Flash Memory
++							Controller */
++#define WM8650_SPIMEM_BASE	0xd8003000	/* 1k	SPI/LPC Memory */
++#define WM8650_ETHER_BASE	0xd8004000	/* 1k	Ethernet MAC 0 */
++#define WM8650_ETHER1_BASE	0xd8005000	/* 1k	Ethernet MAC 1 */
++#define WM8650_CIPHER_BASE	0xd8006000	/* 4k	Cipher
++							(Security Engine) */
++# define WM8650_CIPHER_EXT_BASE	0xd8006400	/* 3k	Security Engine
++							Extended regs */
++#define WM8650_USB_HOST_BASE	0xd8007000	/* 2k	USB 2.0 Host */
++#define WM8650_USB_HDC_BASE	0xd8007800	/* 2k	USB Host/Device */
++# define WM8650_EHCI_BASE	0xd8007900	/*	EHCI */
++# define WM8650_UHCI_BASE	0xd8007b00	/*	UHCI */
++#define WM8650_PATA_BASE	0xd8008000	/* 2k	PATA Controller */
++#define WM8650_PS2_BASE		0xd8008800	/* 1k	PS/2 */
++#define WM8650_USB_HOST2_BASE	0xd8008c00	/* 1k	USB 2.0 Extra Host */
++# define WM8650_UHCI2_BASE	0xd8008d00	/*	Extra UHCI */
++#define WM8650_NAND_BASE	0xd8009000	/* 1k	NAND Controller */
++#define WM8650_NOR_BASE		0xd8009400	/* 1k	NOR Controller */
++#define WM8650_USB_DEV_BASE	0xd8009800	/* 2k	USB slave (device) */
++#define WM8650_SDMMC_BASE	0xd800a000	/* 1k	SD/MMC Controller */
++#define WM8650_SDMMC1_BASE	0xd800a400	/* 1k	SD/MMC Controller 1 */
++#define WM8650_VPU_BASE		0xd8050100	/* 512	VPU */
++#define WM8650_GOV_BASE		0xd8050300	/* 256	GOV */
++#define WM8650_GEGEA_BASE	0xd8050400	/* 768	GE/GE Alpha Mixing */
++#define WM8650_DISP_BASE	0xd8050700	/* 256	Display? */
++#define WM8650_GOVR_BASE	0xd8050800	/* 512	GOVR (frambuffer) */
++#define WM8650_VID_BASE		0xd8050a00	/* 256	VID */
++#define WM8650_HDTV_BASE	0xd8050b00	/* 256	HDTV */
++#define WM8650_GOVW_BASE	0xd8050c00	/* 256	GOVW */
++#define WM8650_SCL_BASE		0xd8050d00	/* 512	SCL */
++#define WM8650_VPP_BASE		0xd8050f00	/* 256	VPP */
++#define WM8650_HDMITX_BASE	0xd8060000	/* 64k	HDMI Transmitter */
++#define WM8650_HDCP_BASE	0xd8070000	/* 64k	HDCP Controller */
++#define WM8650_USB_OTG_BASE	0xd80e4000	/* 16k	USB On-the-Go */
++#define WM8650_I2S_BASE		0xd80ed800	/* 2k	I2S */
++#define WM8650_DSSMBOX_BASE	0xd80ee000	/* 1k	DSS MBOX */
++#define WM8650_DSSPERM_BASE	0xd80ee400	/* 1k	DSS PERM */
++#define WM8650_VDU_BASE		0xd80d0000	/* 1k	VDU */
++#define WM8650_SCRCNT_BASE	0xd80d0400	/* 256	SCRCNT */
++#define WM8650_VLDBUF_BASE	0xd80d1000	/* 1k	VLDBUF */
++#define WM8650_IQ_BASE		0xd80f1400	/* 1k	IQ */
++#define WM8650_IDCT_BASE	0xd80f1800	/* 1k	IDCT */
++#define WM8650_STREAMIN_BASE	0xd80f2000	/* 1k	STREAMIN */
++#define WM8650_CSS_FIFO_BASE	0xd80f3000	/* 1k	CSS FIFO */
++#define WM8650_AVBO_FIFO_BASE	0xd80f3400	/* 1k	AVBO FIFO */
++#define WM8650_SPU_FIFO_BASE	0xd80f3800	/* 1k	SPU FIFO */
++#define WM8650_TSIN0_BASE	0xd80f4000	/* 4k	TS IN 0 */
++#define WM8650_TSIN1_BASE	0xd80f5000	/* 4k	TS IN 1 */
++#define WM8650_TSIN2_BASE	0xd80f6000	/* 4k	TS IN 2 */
++#define WM8650_TSOUT_BASE	0xd80f7000	/* 4k	TS OUT */
++#define WM8650_H264DEC_BASE	0xd80f8000	/* 16k	H264 Decoder */
++#define WM8650_JPEGDEC_BASE	0xd80fe000	/* 4k	JPEG Decoder */
++#define WM8650_JPEGENC_BASE	0xd80ff000	/* 4k	JPEG Encoder */
++
++/* APB Slaves */
++
++#define WM8650_RTC_BASE		0xd8100000	/* 64k	RTC */
++#define WM8650_GPIO_BASE	0xd8110000	/* 64k	GPIO Configuration */
++#define WM8650_SCC_BASE		0xd8120000	/* 64k	System Configuration*/
++#define WM8650_PMC_BASE		0xd8130000	/* 64k	PMC Configuration */
++#define WM8650_IC_BASE		0xd8140000	/* 64k	Interrupt Controller*/
++#define WM8650_SIC_BASE		0xd8150000	/* 64k	Secondary IC */
++#define WM8650_AUDIOCODEC_BASE	0xd81f0000	/* 64k	Audio Codec */
++#define WM8650_UART0_BASE	0xd8200000	/* 64k	UART 0 */
++#define WM8650_UART2_BASE	0xd8210000	/* 64k	UART 2 */
++#define WM8650_PWM_BASE		0xd8220000	/* 64k	PWM Configuration */
++#define WM8650_SPI0_BASE	0xd8240000	/* 64k	SPI 0 */
++#define WM8650_SPI1_BASE	0xd8250000	/* 64k	SPI 1 */
++#define WM8650_KEYPAD_BASE	0xd8260000	/* 64k	Keypad control */
++#define WM8650_CIR_BASE		0xd8270000	/* 64k	CIR */
++#define WM8650_I2C0_BASE	0xd8280000	/* 64k	I2C 0 */
++#define WM8650_AC97_BASE	0xd8290000	/* 64k	AC97 */
++#define WM8650_SPI2_BASE	0xd82a0000	/* 64k	SPI 2 */
++#define WM8650_UART1_BASE	0xd82b0000	/* 64k	UART 1 */
++#define WM8650_UART3_BASE	0xd82c0000	/* 64k	UART 3 */
++#define WM8650_PCM_BASE		0xd82d0000	/* 64k	PCM */
++#define WM8650_I2C1_BASE	0xd8320000	/* 64k	I2C 1 */
++#define WM8650_ADC_BASE		0xd8340000	/* 64k	ADC */
++#define WM8650_ROTARY_BASE	0xd8350000	/* 64k	Rotary detector */
++#define WM8650_SCIF_BASE	0xd8360000	/* 64k	Smart Card IF */
++#define WM8650_UART4_BASE	0xd8370000	/* 64k	UART 4 */
++#define WM8650_UART5_BASE	0xd8380000	/* 64k	UART 5 */
++#define WM8650_POWER_MOS_BASE	0xd8390000	/* 64k	Power MOS */
++
++#define WM8650_REGS_END_PHYS	0xd839ffff	/* End of MMIO registers */
++#define WM8650_REGS_LENGTH	(WM8650_REGS_END_PHYS \
++				- WM8650_REGS_START_PHYS + 1)
++
++#endif
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/Kconfig linux-3.4/arch/arm/mach-vt8500/Kconfig
+--- linux-3.4.orig/arch/arm/mach-vt8500/Kconfig	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/Kconfig	2019-03-06 17:20:01.000000000 -0700
+@@ -6,6 +6,9 @@
+ config VTWM_VERSION_WM8505
+ 	bool
+ 
++config VTWM_VERSION_WM8650
++	bool
++
+ config MACH_BV07
+ 	bool "Benign BV07-8500 Mini Netbook"
+ 	depends on ARCH_VT8500
+@@ -26,6 +29,15 @@
+ 	  many hardware implementations in identical exterior, make sure
+ 	  that yours is indeed based on a WonderMedia WM8505 chip.
+ 
++config MACH_WM8650REFBOARD
++	bool "WM8650 reference board"
++	depends on ARCH_VT8500
++	select VTWM_VERSION_WM8650
++	help
++	  Add support for netbooks, tablets and other devices based on
++	  the reference board design as produced by WonderMedia, using
++	  WM8650 System-on-Chip.
++
+ comment "LCD panel size"
+ 
+ config WMT_PANEL_800X480
+@@ -70,4 +82,14 @@
+ 	  'panel=1024x600' to your kernel command line. Otherwise, the
+ 	  largest one available will be used.
+ 
++config WMT_PANEL_1024X768
++	bool "VGA output at 1024x768 resolution"
++	depends on (FB_VT8500)
++	help
++	  These are found in Kaser YF-700 thin clients and possibly elsewhere.
++
++	  To select this panel at runtime, say y here and append
++	  'panel=1024x768' to your kernel command line. Otherwise, the
++	  largest one available will be used.
++
+ endif
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/Makefile linux-3.4/arch/arm/mach-vt8500/Makefile
+--- linux-3.4.orig/arch/arm/mach-vt8500/Makefile	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/Makefile	2019-03-06 17:20:01.000000000 -0700
+@@ -1,9 +1,11 @@
+-obj-y += devices.o gpio.o irq.o timer.o
++obj-y += devices.o irq.o timer.o
+ 
+-obj-$(CONFIG_VTWM_VERSION_VT8500) += devices-vt8500.o
+-obj-$(CONFIG_VTWM_VERSION_WM8505) += devices-wm8505.o
++obj-$(CONFIG_VTWM_VERSION_VT8500) += devices-vt8500.o gpio-vt8500.o
++obj-$(CONFIG_VTWM_VERSION_WM8505) += devices-wm8505.o gpio-wm8505.o
++obj-$(CONFIG_VTWM_VERSION_WM8650) += devices-wm8650.o gpio-wm8650.o
+ 
+ obj-$(CONFIG_MACH_BV07) += bv07.o
+ obj-$(CONFIG_MACH_WM8505_7IN_NETBOOK) += wm8505_7in.o
++obj-$(CONFIG_MACH_WM8650REFBOARD) += wm8650ref.o
+ 
+ obj-$(CONFIG_HAVE_PWM) += pwm.o
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/wm8505_7in.c linux-3.4/arch/arm/mach-vt8500/wm8505_7in.c
+--- linux-3.4.orig/arch/arm/mach-vt8500/wm8505_7in.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/wm8505_7in.c	2019-03-06 17:20:01.000000000 -0700
+@@ -31,11 +31,14 @@
+ static struct platform_device *devices[] __initdata = {
+ 	&vt8500_device_uart0,
+ 	&vt8500_device_ehci,
++	&vt8500_device_velocity,
+ 	&vt8500_device_wm8505_fb,
+ 	&vt8500_device_ge_rops,
+ 	&vt8500_device_pwm,
+ 	&vt8500_device_pwmbl,
+ 	&vt8500_device_rtc,
++	&vt8500_device_sdmmc,
++	&vt8500_device_nand,
+ };
+ 
+ static void vt8500_power_off(void)
+@@ -64,7 +67,7 @@
+ 
+ 	wm8505_set_resources();
+ 	platform_add_devices(devices, ARRAY_SIZE(devices));
+-	vt8500_gpio_init();
++	wm8505_gpio_init();
+ }
+ 
+ MACHINE_START(WM8505_7IN_NETBOOK, "WM8505 7-inch generic netbook")
+diff -Naur linux-3.4.orig/arch/arm/mach-vt8500/wm8650ref.c linux-3.4/arch/arm/mach-vt8500/wm8650ref.c
+--- linux-3.4.orig/arch/arm/mach-vt8500/wm8650ref.c	1969-12-31 17:00:00.000000000 -0700
++++ linux-3.4/arch/arm/mach-vt8500/wm8650ref.c	2019-03-06 17:20:01.000000000 -0700
+@@ -0,0 +1,82 @@
++/*
++ *  arch/arm/mach-vt8500/wm8650ref.c
++ *
++ *  Copyright (C) 2011 Alexey Charkov <alchark@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++#include <linux/io.h>
++#include <linux/pm.h>
++
++#include <asm/mach-types.h>
++#include <asm/mach/arch.h>
++
++#include "devices.h"
++
++static void __iomem *pmc_hiber;
++
++static struct platform_device *devices[] __initdata = {
++	&vt8500_device_uart0,
++	&vt8500_device_ehci,
++	&vt8500_device_uhci,
++	&vt8500_device_rhine0,
++	&vt8500_device_rhine1,
++	&vt8500_device_wm8505_fb,
++	&vt8500_device_ge_rops,
++	&vt8500_device_pwm,
++	&vt8500_device_pwmbl,
++	&vt8500_device_rtc,
++	&vt8500_device_sdmmc,
++	&vt8500_device_nand,
++};
++
++static void vt8500_power_off(void)
++{
++	local_irq_disable();
++	writew(5, pmc_hiber);
++	asm("mcr%? p15, 0, %0, c7, c0, 4" : : "r" (0));
++}
++
++void __init wm8650ref_init(void)
++{
++#ifdef CONFIG_FB_WM8505
++	void __iomem *gpio_mux_reg = ioremap(wmt_gpio_base + 0x200, 4);
++	if (gpio_mux_reg) {
++		writel(readl(gpio_mux_reg) | 0x80000000, gpio_mux_reg);
++		iounmap(gpio_mux_reg);
++	} else {
++		printk(KERN_ERR "Could not remap the GPIO mux register, display may not work properly!\n");
++	}
++#endif
++	pmc_hiber = ioremap(wmt_pmc_base + 0x12, 2);
++	if (pmc_hiber)
++		pm_power_off = &vt8500_power_off;
++	else
++		printk(KERN_ERR "PMC Hibernation register could not be remapped, not enabling power off!\n");
++
++	wm8650_set_resources();
++	platform_add_devices(devices, ARRAY_SIZE(devices));
++	wm8650_gpio_init();
++}
++
++MACHINE_START(WM8650REFBOARD, "WM8650 reference board")
++	.atag_offset	= 0x100,
++	.reserve	= wm8650_reserve_mem,
++	.map_io		= wm8650_map_io,
++	.init_irq	= wm8505_init_irq,
++	.timer		= &vt8500_timer,
++	.init_machine	= wm8650ref_init,
++MACHINE_END
+diff -Naur linux-3.4.orig/arch/mips/alchemy/common/time.c linux-3.4/arch/mips/alchemy/common/time.c
+--- linux-3.4.orig/arch/mips/alchemy/common/time.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/mips/alchemy/common/time.c	2019-03-06 17:20:01.000000000 -0700
+@@ -146,7 +146,7 @@
+ 	cd->shift = 32;
+ 	cd->mult = div_sc(32768, NSEC_PER_SEC, cd->shift);
+ 	cd->max_delta_ns = clockevent_delta2ns(0xffffffff, cd);
+-	cd->min_delta_ns = clockevent_delta2ns(9, cd);	/* ~0.28ms */
++	cd->min_delta_ns = clockevent_delta2ns(8, cd);	/* ~0.25ms */
+ 	clockevents_register_device(cd);
+ 	setup_irq(m2int, &au1x_rtcmatch2_irqaction);
+ 
+diff -Naur linux-3.4.orig/arch/mips/ath79/dev-wmac.c linux-3.4/arch/mips/ath79/dev-wmac.c
+--- linux-3.4.orig/arch/mips/ath79/dev-wmac.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/mips/ath79/dev-wmac.c	2019-03-06 17:20:01.000000000 -0700
+@@ -96,7 +96,7 @@
+ {
+ 	if (soc_is_ar913x())
+ 		ar913x_wmac_setup();
+-	else if (soc_is_ar933x())
++	if (soc_is_ar933x())
+ 		ar933x_wmac_setup();
+ 	else
+ 		BUG();
+diff -Naur linux-3.4.orig/arch/mips/configs/nlm_xlp_defconfig linux-3.4/arch/mips/configs/nlm_xlp_defconfig
+--- linux-3.4.orig/arch/mips/configs/nlm_xlp_defconfig	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/mips/configs/nlm_xlp_defconfig	2019-03-06 17:20:01.000000000 -0700
+@@ -8,7 +8,7 @@
+ # CONFIG_SECCOMP is not set
+ CONFIG_USE_OF=y
+ CONFIG_EXPERIMENTAL=y
+-CONFIG_CROSS_COMPILE=""
++CONFIG_CROSS_COMPILE="mips-linux-gnu-"
+ # CONFIG_LOCALVERSION_AUTO is not set
+ CONFIG_SYSVIPC=y
+ CONFIG_POSIX_MQUEUE=y
+@@ -22,7 +22,7 @@
+ CONFIG_CGROUPS=y
+ CONFIG_NAMESPACES=y
+ CONFIG_BLK_DEV_INITRD=y
+-CONFIG_INITRAMFS_SOURCE=""
++CONFIG_INITRAMFS_SOURCE="usr/dev_file_list usr/rootfs.xlp"
+ CONFIG_RD_BZIP2=y
+ CONFIG_RD_LZMA=y
+ CONFIG_INITRAMFS_COMPRESSION_LZMA=y
+diff -Naur linux-3.4.orig/arch/mips/configs/nlm_xlr_defconfig linux-3.4/arch/mips/configs/nlm_xlr_defconfig
+--- linux-3.4.orig/arch/mips/configs/nlm_xlr_defconfig	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/mips/configs/nlm_xlr_defconfig	2019-03-06 17:20:01.000000000 -0700
+@@ -8,7 +8,7 @@
+ CONFIG_PREEMPT_VOLUNTARY=y
+ CONFIG_KEXEC=y
+ CONFIG_EXPERIMENTAL=y
+-CONFIG_CROSS_COMPILE=""
++CONFIG_CROSS_COMPILE="mips-linux-gnu-"
+ # CONFIG_LOCALVERSION_AUTO is not set
+ CONFIG_SYSVIPC=y
+ CONFIG_POSIX_MQUEUE=y
+@@ -22,7 +22,7 @@
+ CONFIG_NAMESPACES=y
+ CONFIG_SCHED_AUTOGROUP=y
+ CONFIG_BLK_DEV_INITRD=y
+-CONFIG_INITRAMFS_SOURCE=""
++CONFIG_INITRAMFS_SOURCE="usr/dev_file_list usr/rootfs.xlr"
+ CONFIG_RD_BZIP2=y
+ CONFIG_RD_LZMA=y
+ CONFIG_INITRAMFS_COMPRESSION_GZIP=y
+diff -Naur linux-3.4.orig/arch/mips/configs/powertv_defconfig linux-3.4/arch/mips/configs/powertv_defconfig
+--- linux-3.4.orig/arch/mips/configs/powertv_defconfig	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/mips/configs/powertv_defconfig	2019-03-06 17:20:01.000000000 -0700
+@@ -6,7 +6,7 @@
+ CONFIG_PREEMPT=y
+ # CONFIG_SECCOMP is not set
+ CONFIG_EXPERIMENTAL=y
+-CONFIG_CROSS_COMPILE=""
++CONFIG_CROSS_COMPILE="mips-linux-"
+ # CONFIG_SWAP is not set
+ CONFIG_SYSVIPC=y
+ CONFIG_LOG_BUF_SHIFT=16
+diff -Naur linux-3.4.orig/arch/mips/include/asm/mach-au1x00/gpio-au1300.h linux-3.4/arch/mips/include/asm/mach-au1x00/gpio-au1300.h
+--- linux-3.4.orig/arch/mips/include/asm/mach-au1x00/gpio-au1300.h	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/mips/include/asm/mach-au1x00/gpio-au1300.h	2019-03-06 17:20:01.000000000 -0700
+@@ -11,9 +11,6 @@
+ #include <asm/io.h>
+ #include <asm/mach-au1x00/au1000.h>
+ 
+-struct gpio;
+-struct gpio_chip;
+-
+ /* with the current GPIC design, up to 128 GPIOs are possible.
+  * The only implementation so far is in the Au1300, which has 75 externally
+  * available GPIOs.
+@@ -206,22 +203,7 @@
+ 	return 0;
+ }
+ 
+-static inline int gpio_request_one(unsigned gpio,
+-					unsigned long flags, const char *label)
+-{
+-	return 0;
+-}
+-
+-static inline int gpio_request_array(struct gpio *array, size_t num)
+-{
+-	return 0;
+-}
+-
+-static inline void gpio_free(unsigned gpio)
+-{
+-}
+-
+-static inline void gpio_free_array(struct gpio *array, size_t num)
++static inline void gpio_free(unsigned int gpio)
+ {
+ }
+ 
+diff -Naur linux-3.4.orig/arch/mips/include/asm/page.h linux-3.4/arch/mips/include/asm/page.h
+--- linux-3.4.orig/arch/mips/include/asm/page.h	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/mips/include/asm/page.h	2019-03-06 17:20:01.000000000 -0700
+@@ -39,6 +39,9 @@
+ #define HPAGE_MASK	(~(HPAGE_SIZE - 1))
+ #define HUGETLB_PAGE_ORDER	(HPAGE_SHIFT - PAGE_SHIFT)
+ #else /* !CONFIG_HUGETLB_PAGE */
++# ifndef BUILD_BUG
++#  define BUILD_BUG() do { extern void __build_bug(void); __build_bug(); } while (0)
++# endif
+ #define HPAGE_SHIFT	({BUILD_BUG(); 0; })
+ #define HPAGE_SIZE	({BUILD_BUG(); 0; })
+ #define HPAGE_MASK	({BUILD_BUG(); 0; })
+diff -Naur linux-3.4.orig/arch/mips/kernel/vmlinux.lds.S linux-3.4/arch/mips/kernel/vmlinux.lds.S
+--- linux-3.4.orig/arch/mips/kernel/vmlinux.lds.S	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/mips/kernel/vmlinux.lds.S	2019-03-06 17:20:01.000000000 -0700
+@@ -69,6 +69,7 @@
+ 	RODATA
+ 
+ 	/* writeable */
++	_sdata = .;				/* Start of data section */
+ 	.data : {	/* Data */
+ 		. = . + DATAOFFSET;		/* for CONFIG_MAPPED_KERNEL */
+ 
+diff -Naur linux-3.4.orig/arch/mips/mm/fault.c linux-3.4/arch/mips/mm/fault.c
+--- linux-3.4.orig/arch/mips/mm/fault.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/mips/mm/fault.c	2019-03-06 17:20:01.000000000 -0700
+@@ -41,8 +41,6 @@
+ 	const int field = sizeof(unsigned long) * 2;
+ 	siginfo_t info;
+ 	int fault;
+-	unsigned int flags = FAULT_FLAG_ALLOW_RETRY | FAULT_FLAG_KILLABLE |
+-						 (write ? FAULT_FLAG_WRITE : 0);
+ 
+ #if 0
+ 	printk("Cpu%d[%s:%d:%0*lx:%ld:%0*lx]\n", raw_smp_processor_id(),
+@@ -92,7 +90,6 @@
+ 	if (in_atomic() || !mm)
+ 		goto bad_area_nosemaphore;
+ 
+-retry:
+ 	down_read(&mm->mmap_sem);
+ 	vma = find_vma(mm, address);
+ 	if (!vma)
+@@ -146,11 +143,7 @@
+ 	 * make sure we exit gracefully rather than endlessly redo
+ 	 * the fault.
+ 	 */
+-	fault = handle_mm_fault(mm, vma, address, flags);
+-
+-	if ((fault & VM_FAULT_RETRY) && fatal_signal_pending(current))
+-		return;
+-
++	fault = handle_mm_fault(mm, vma, address, write ? FAULT_FLAG_WRITE : 0);
+ 	perf_sw_event(PERF_COUNT_SW_PAGE_FAULTS, 1, regs, address);
+ 	if (unlikely(fault & VM_FAULT_ERROR)) {
+ 		if (fault & VM_FAULT_OOM)
+@@ -159,27 +152,12 @@
+ 			goto do_sigbus;
+ 		BUG();
+ 	}
+-	if (flags & FAULT_FLAG_ALLOW_RETRY) {
+-		if (fault & VM_FAULT_MAJOR) {
+-			perf_sw_event(PERF_COUNT_SW_PAGE_FAULTS_MAJ, 1,
+-						  regs, address);
+-			tsk->maj_flt++;
+-		} else {
+-			perf_sw_event(PERF_COUNT_SW_PAGE_FAULTS_MIN, 1,
+-						  regs, address);
+-			tsk->min_flt++;
+-		}
+-		if (fault & VM_FAULT_RETRY) {
+-			flags &= ~FAULT_FLAG_ALLOW_RETRY;
+-
+-			/*
+-			 * No need to up_read(&mm->mmap_sem) as we would
+-			 * have already released it in __lock_page_or_retry
+-			 * in mm/filemap.c.
+-			 */
+-
+-			goto retry;
+-		}
++	if (fault & VM_FAULT_MAJOR) {
++		perf_sw_event(PERF_COUNT_SW_PAGE_FAULTS_MAJ, 1, regs, address);
++		tsk->maj_flt++;
++	} else {
++		perf_sw_event(PERF_COUNT_SW_PAGE_FAULTS_MIN, 1, regs, address);
++		tsk->min_flt++;
+ 	}
+ 
+ 	up_read(&mm->mmap_sem);
+diff -Naur linux-3.4.orig/arch/mips/pmc-sierra/yosemite/ht-irq.c linux-3.4/arch/mips/pmc-sierra/yosemite/ht-irq.c
+--- linux-3.4.orig/arch/mips/pmc-sierra/yosemite/ht-irq.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/mips/pmc-sierra/yosemite/ht-irq.c	2019-03-06 17:20:01.000000000 -0700
+@@ -35,6 +35,16 @@
+  */
+ void __init titan_ht_pcibios_fixup_bus(struct pci_bus *bus)
+ {
++	struct pci_bus *current_bus = bus;
++	struct pci_dev *devices;
++	struct list_head *devices_link;
++
++	list_for_each(devices_link, &(current_bus->devices)) {
++		devices = pci_dev_b(devices_link);
++		if (devices == NULL)
++			continue;
++	}
++
+ 	/*
+ 	 * PLX and SPKT related changes go here
+ 	 */
+diff -Naur linux-3.4.orig/arch/mips/txx9/generic/7segled.c linux-3.4/arch/mips/txx9/generic/7segled.c
+--- linux-3.4.orig/arch/mips/txx9/generic/7segled.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/arch/mips/txx9/generic/7segled.c	2019-03-06 17:20:01.000000000 -0700
+@@ -102,7 +102,7 @@
+ 			break;
+ 		}
+ 		dev->id = i;
+-		dev->bus = &tx_7segled_subsys;
++		dev->dev = &tx_7segled_subsys;
+ 		error = device_register(dev);
+ 		if (!error) {
+ 			device_create_file(dev, &dev_attr_ascii);
+diff -Naur linux-3.4.orig/drivers/gpu/drm/nouveau/nouveau_gem.c linux-3.4/drivers/gpu/drm/nouveau/nouveau_gem.c
+--- linux-3.4.orig/drivers/gpu/drm/nouveau/nouveau_gem.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/drivers/gpu/drm/nouveau/nouveau_gem.c	2019-03-06 17:20:01.000000000 -0700
+@@ -399,6 +399,25 @@
+ }
+ 
+ static int
++validate_sync(struct nouveau_channel *chan, struct nouveau_bo *nvbo)
++{
++	struct nouveau_fence *fence = NULL;
++	int ret = 0;
++
++	spin_lock(&nvbo->bo.bdev->fence_lock);
++	if (nvbo->bo.sync_obj)
++		fence = nouveau_fence_ref(nvbo->bo.sync_obj);
++	spin_unlock(&nvbo->bo.bdev->fence_lock);
++
++	if (fence) {
++		ret = nouveau_fence_sync(fence, chan);
++		nouveau_fence_unref(&fence);
++	}
++
++	return ret;
++}
++
++static int
+ validate_list(struct nouveau_channel *chan, struct list_head *list,
+ 	      struct drm_nouveau_gem_pushbuf_bo *pbbo, uint64_t user_pbbo_ptr)
+ {
+@@ -866,3 +885,24 @@
+ 	return ret;
+ }
+ 
++====
++--- drivers/gpu/drm/nouveau/nouveau_gem.c	2012-02-01 15:36:10.000000000 -0700
+++++ drivers/gpu/drm/nouveau/nouveau_gem.c	2012-02-06 12:27:43.000000000 -0700
++@@ -412,7 +431,7 @@
++ 	list_for_each_entry(nvbo, list, entry) {
++ 		struct drm_nouveau_gem_pushbuf_bo *b = &pbbo[nvbo->pbbo_index];
++ 
++-		ret = nouveau_fence_sync(nvbo->bo.sync_obj, chan);
+++		ret = validate_sync(chan, nvbo);
++ 		if (unlikely(ret)) {
++ 			NV_ERROR(dev, "fail pre-validate sync\n");
++ 			return ret;
++@@ -435,7 +454,7 @@
++ 			return ret;
++ 		}
++ 
++-		ret = nouveau_fence_sync(nvbo->bo.sync_obj, chan);
+++		ret = validate_sync(chan, nvbo);
++ 		if (unlikely(ret)) {
++ 			NV_ERROR(dev, "fail post-validate sync\n");
++ 			return ret;
+diff -Naur linux-3.4.orig/drivers/input/serio/i8042.h linux-3.4/drivers/input/serio/i8042.h
+--- linux-3.4.orig/drivers/input/serio/i8042.h	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/drivers/input/serio/i8042.h	2019-03-06 17:20:01.000000000 -0700
+@@ -16,6 +16,8 @@
+ 
+ #if defined(CONFIG_MACH_JAZZ)
+ #include "i8042-jazzio.h"
++#elif defined(CONFIG_ARCH_VT8500)
++#include "i8042-vt8500.h"
+ #elif defined(CONFIG_SGI_HAS_I8042)
+ #include "i8042-ip22io.h"
+ #elif defined(CONFIG_SNI_RM)
+diff -Naur linux-3.4.orig/drivers/input/serio/i8042-vt8500.h linux-3.4/drivers/input/serio/i8042-vt8500.h
+--- linux-3.4.orig/drivers/input/serio/i8042-vt8500.h	1969-12-31 17:00:00.000000000 -0700
++++ linux-3.4/drivers/input/serio/i8042-vt8500.h	2019-03-06 17:20:01.000000000 -0700
+@@ -0,0 +1,77 @@
++#ifndef _I8042_VT8500_H
++#define _I8042_VT8500_H
++
++#include <mach/i8042.h>
++
++/*
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 as published by
++ * the Free Software Foundation.
++ */
++
++static void __iomem *regbase;
++
++/*
++ * Names.
++ */
++
++#define I8042_KBD_PHYS_DESC "vt8500ps2/serio0"
++#define I8042_AUX_PHYS_DESC "vt8500ps2/serio1"
++#define I8042_MUX_PHYS_DESC "vt8500ps2/serio%d"
++
++/*
++ * IRQs.
++ */
++
++#define I8042_KBD_IRQ	(wmt_i8042_kbd_irq)
++#define I8042_AUX_IRQ	(wmt_i8042_aux_irq)
++
++
++/*
++ * Register numbers.
++ */
++
++#define I8042_COMMAND_REG	(regbase + 0x4)
++#define I8042_STATUS_REG	(regbase + 0x4)
++#define I8042_DATA_REG		(regbase + 0x0)
++
++static inline int i8042_read_data(void)
++{
++	return readl(I8042_DATA_REG);
++}
++
++static inline int i8042_read_status(void)
++{
++	return readl(I8042_STATUS_REG);
++}
++
++static inline void i8042_write_data(int val)
++{
++	writel(val, I8042_DATA_REG);
++}
++
++static inline void i8042_write_command(int val)
++{
++	writel(val, I8042_COMMAND_REG);
++}
++
++static inline int i8042_platform_init(void)
++{
++	i8042_reset = true;
++
++	if (!wmt_i8042_base)
++		return -ENODEV;
++
++	regbase = ioremap(wmt_i8042_base, SZ_1K);
++	if (!regbase)
++		return -ENODEV;
++
++	return 0;
++}
++
++static inline void i8042_platform_exit(void)
++{
++	iounmap(regbase);
++}
++
++#endif /* _I8042_VT8500_H */
+diff -Naur linux-3.4.orig/drivers/input/serio/Kconfig linux-3.4/drivers/input/serio/Kconfig
+--- linux-3.4.orig/drivers/input/serio/Kconfig	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/drivers/input/serio/Kconfig	2019-03-06 17:20:01.000000000 -0700
+@@ -21,7 +21,8 @@
+ config SERIO_I8042
+ 	tristate "i8042 PC Keyboard controller" if EXPERT || !X86
+ 	default y
+-	depends on !PARISC && (!ARM || ARCH_SHARK || FOOTBRIDGE_HOST) && \
++	depends on !PARISC && \
++		  (!ARM || ARCH_SHARK || ARCH_VT8500 || FOOTBRIDGE_HOST) && \
+ 		   (!SUPERH || SH_CAYMAN) && !M68K && !BLACKFIN
+ 	help
+ 	  i8042 is the chip over which the standard AT keyboard and PS/2
+diff -Naur linux-3.4.orig/drivers/mmc/host/Kconfig linux-3.4/drivers/mmc/host/Kconfig
+--- linux-3.4.orig/drivers/mmc/host/Kconfig	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/drivers/mmc/host/Kconfig	2019-03-06 17:20:01.000000000 -0700
+@@ -619,3 +619,10 @@
+ 
+ 	  Note: These controllers only support SDIO cards and do not
+ 	  support MMC or SD memory cards.
++
++config MMC_WMT
++	tristate "WonderMedia SD/MMC Controller support"
++	depends on ARCH_VT8500
++	help
++	  This selects support for the SD/MMC controller found in
++	  VIA VT8500, WonderMedia WM8505, WM8650 and similar SoC's.
+diff -Naur linux-3.4.orig/drivers/mmc/host/Makefile linux-3.4/drivers/mmc/host/Makefile
+--- linux-3.4.orig/drivers/mmc/host/Makefile	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/drivers/mmc/host/Makefile	2019-03-06 17:20:01.000000000 -0700
+@@ -45,6 +45,7 @@
+ obj-$(CONFIG_MMC_JZ4740)	+= jz4740_mmc.o
+ obj-$(CONFIG_MMC_VUB300)	+= vub300.o
+ obj-$(CONFIG_MMC_USHC)		+= ushc.o
++obj-$(CONFIG_MMC_WMT)		+= wmt-sdmmc.o
+ 
+ obj-$(CONFIG_MMC_SDHCI_PLTFM)		+= sdhci-pltfm.o
+ obj-$(CONFIG_MMC_SDHCI_CNS3XXX)		+= sdhci-cns3xxx.o
+diff -Naur linux-3.4.orig/drivers/mmc/host/wmt-sdmmc.c linux-3.4/drivers/mmc/host/wmt-sdmmc.c
+--- linux-3.4.orig/drivers/mmc/host/wmt-sdmmc.c	1969-12-31 17:00:00.000000000 -0700
++++ linux-3.4/drivers/mmc/host/wmt-sdmmc.c	2019-03-06 17:20:01.000000000 -0700
+@@ -0,0 +1,1150 @@
++/*
++ *  linux/drivers/mmc/host/wmt-sdmmc.c - VT8500/WM8505 AHB to MMC/SD driver
++ *
++ *  Copyright (C) 2010 Tony Prisk
++ *  Copyright (C) 2008 WonderMedia Technologies, Inc.
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License version 2 as
++ *  published by the Free Software Foundation
++ */
++
++#include <linux/init.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/ioport.h>
++#include <linux/errno.h>
++#include <linux/dma-mapping.h>
++#include <linux/delay.h>
++#include <linux/io.h>
++#include <linux/irq.h>
++#include <linux/clk.h>
++#include <linux/gpio.h>
++
++#include <linux/mmc/host.h>
++#include <linux/mmc/mmc.h>
++#include <linux/mmc/sd.h>
++
++#include <asm/byteorder.h>
++
++
++#define DRIVER_NAME "wmt-sdmmc"
++
++
++/* MMC/SD controller registers (VT8500/WM8505) */
++#define SDMMC_CTLR			0x00
++#define SDMMC_CMD			0x01
++#define SDMMC_RSPTYPE		0x02
++#define SDMMC_ARG			0x04
++#define SDMMC_BUSMODE		0x08
++#define SDMMC_BLKLEN		0x0C
++#define SDMMC_BLKCNT		0x0E
++#define SDMMC_RSP			0x10
++#define SDMMC_CBCR			0x20
++#define SDMMC_INTMASK0		0x24
++#define SDMMC_INTMASK1		0x25
++#define SDMMC_STS0			0x28
++#define SDMMC_STS1			0x29
++#define SDMMC_STS2			0x2A
++#define SDMMC_STS3			0x2B
++#define SDMMC_RSPTIMEOUT		0x2C
++#define SDMMC_CLK			0x30	/* VT8500 only */
++#define SDMMC_EXTCTRL		0x34
++#define SDMMC_SBLKLEN		0x38
++#define SDMMC_DMATIMEOUT		0x3C
++
++
++/* SDMMC_CTLR bit fields */
++#define CTLR_CMD_START		0x01
++#define CTLR_CMD_WRITE		0x04
++#define CTLR_FIFO_RESET		0x08
++
++/* SDMMC_BUSMODE bit fields */
++#define BM_SPI_MODE			0x01
++#define BM_FOURBIT_MODE		0x02
++#define BM_EIGHTBIT_MODE		0x04
++#define BM_SD_OFF			0x10
++#define BM_SPI_CS			0x20
++#define BM_SD_POWER			0x40
++#define BM_SOFT_RESET		0x80
++#define BM_ONEBIT_MASK		0xFD
++
++/* SDMMC_BLKLEN bit fields */
++#define BLKL_CRCERR_ABORT	0x0800
++#define BLKL_CD_POL_HIGH		0x1000
++#define BLKL_GPI_CD			0x2000
++#define BLKL_DATA3_CD		0x4000
++#define BLKL_INT_ENABLE		0x8000
++
++/* SDMMC_INTMASK0 bit fields */
++#define INT0_MBLK_TRAN_DONE_INT_EN	0x10
++#define INT0_BLK_TRAN_DONE_INT_EN	0x20
++#define INT0_CD_INT_EN			0x40
++#define INT0_DI_INT_EN			0x80
++
++/* SDMMC_INTMASK1 bit fields */
++#define INT1_CMD_RES_TRAN_DONE_INT_EN	0x02
++#define INT1_CMD_RES_TOUT_INT_EN		0x04
++#define INT1_MBLK_AUTO_STOP_INT_EN		0x08
++#define INT1_DATA_TOUT_INT_EN			0x10
++#define INT1_RESCRC_ERR_INT_EN		0x20
++#define INT1_RCRC_ERR_INT_EN			0x40
++#define INT1_WCRC_ERR_INT_EN			0x80
++
++/* SDMMC_STS0 bit fields */
++#define STS0_WRITE_PROTECT		0x02
++#define STS0_CD_DATA3			0x04
++#define STS0_CD_GPI				0x08
++#define STS0_MBLK_DONE			0x10
++#define STS0_BLK_DONE			0x20
++#define STS0_CARD_DETECT			0x40
++#define STS0_DEVICE_INS			0x80
++
++/* SDMMC_STS1 bit fields */
++#define STS1_SDIO_INT			0x01
++#define STS1_CMDRSP_DONE			0x02
++#define STS1_RSP_TIMEOUT			0x04
++#define STS1_AUTOSTOP_DONE		0x08
++#define STS1_DATA_TIMEOUT		0x10
++#define STS1_RSP_CRC_ERR			0x20
++#define STS1_RCRC_ERR			0x40
++#define STS1_WCRC_ERR			0x80
++
++/* SDMMC_STS2 bit fields */
++#define STS2_CMD_RES_BUSY		0x10
++#define STS2_DATARSP_BUSY		0x20
++#define STS2_DIS_FORCECLK		0x80
++
++
++/* MMC/SD DMA Controller Registers */
++#define SDDMA_GCR			0x100
++#define SDDMA_IER			0x104
++#define SDDMA_ISR			0x108
++#define SDDMA_DESPR			0x10C
++#define SDDMA_RBR			0x110
++#define SDDMA_DAR			0x114
++#define SDDMA_BAR			0x118
++#define SDDMA_CPR			0x11C
++#define SDDMA_CCR			0x120
++
++
++/* SDDMA_GCR bit fields */
++#define DMA_GCR_DMA_EN			0x00000001
++#define DMA_GCR_SOFT_RESET		0x00000100
++
++/* SDDMA_IER bit fields */
++#define DMA_IER_INT_EN			0x00000001
++
++/* SDDMA_ISR bit fields */
++#define DMA_ISR_INT_STS			0x00000001
++
++/* SDDMA_RBR bit fields */
++#define DMA_RBR_FORMAT			0x40000000
++#define DMA_RBR_END				0x80000000
++
++/* SDDMA_CCR bit fields */
++#define DMA_CCR_RUN				0x00000080
++#define DMA_CCR_IF_TO_PERIPHERAL	0x00000000
++#define DMA_CCR_PERIPHERAL_TO_IF	0x00400000
++
++/* SDDMA_CCR event status */
++#define DMA_CCR_EVT_NO_STATUS		0x00000000
++#define DMA_CCR_EVT_UNDERRUN		0x00000001
++#define DMA_CCR_EVT_OVERRUN		0x00000002
++#define DMA_CCR_EVT_DESP_READ		0x00000003
++#define DMA_CCR_EVT_DATA_RW		0x00000004
++#define DMA_CCR_EVT_EARLY_END		0x00000005
++#define DMA_CCR_EVT_SUCCESS		0x0000000F
++
++/* Driver Versions */
++#define WMT_MCI_3426_A0			6
++#define WMT_MCI_3426_A1			7
++#define WMT_MCI_3426_A2			8
++#define WMT_MCI_3437_A0			9
++#define WMT_MCI_3437_A1			10
++#define WMT_MCI_3429			11
++#define WMT_MCI_3451_A0			12
++#define WMT_MCI_3465			13
++
++struct wmt_dma_descriptor {
++	u32 flags;
++	u32 data_buffer_addr;
++	u32 branch_addr;
++	u32 reserved1;
++};
++
++struct wmt_mci_priv {
++	struct mmc_host *mmc;
++	void __iomem *sdmmc_base;
++
++	int irq_regular;
++	int irq_dma;
++
++	void *dma_desc_buffer;
++	dma_addr_t dma_desc_device_addr;
++
++	struct completion cmdcomp;
++	struct completion datacomp;
++
++	struct completion *comp_cmd;
++	struct completion *comp_dma;
++
++	struct mmc_request *req;
++	struct mmc_command *cmd;
++
++	struct clk *clk_sdmmc;
++
++	u32 driver_version;
++};
++
++/*
++ * TODO: Clock Management Code for SD/MMC controller
++ *	 should be replace with clocks.c eventually
++ */
++
++void __iomem *pmc_base;
++
++static void wmt_mci_clk_enable(void)
++{
++	u32 reg_tmp;
++	reg_tmp = readl(pmc_base + 0x254);
++	writel(reg_tmp | (1 << 18), pmc_base + 0x254);
++}
++
++static void wmt_mci_clk_set_rate(u32 rate)
++{
++	u32 pll_mul = (readl(pmc_base + 0x204) & 0x1F);
++	u32 pll_prediv = (readl(pmc_base + 0x204) & 0x100) ? 1 : 2;
++	u32 pll_b;
++	u32 clk_div;
++
++	if (rate == 0)
++		return;
++
++	if (pll_mul < 4)
++		pll_mul = 1;
++	else
++		pll_mul *= 2;
++
++	/* parent rate = 25Mhz */
++	pll_b = 25000000 * pll_mul / pll_prediv;
++
++	if (pll_b % rate)
++		clk_div = pll_b / rate + 1;
++	else
++		clk_div = pll_b / rate;
++
++	if (clk_div > 32)
++		clk_div = 0;
++
++	writel(clk_div, pmc_base + 0x328);
++}
++
++/* End Clock Management */
++
++/* Helper functions for the SD variations */
++
++#define WMT_SD_POWER_OFF	0
++#define WMT_SD_POWER_ON		1
++static void wmt_set_sd_power(struct wmt_mci_priv *priv, int enable)
++{
++	u32 reg_tmp;
++	if (enable) {
++		/* enable SD power */
++		/* VT3465 inverts the BM_SD_OFF bit usage */
++		if (priv->driver_version == WMT_MCI_3465)
++		{
++			reg_tmp = readb(priv->sdmmc_base + SDMMC_BUSMODE);
++			writeb(reg_tmp | BM_SD_OFF, priv->sdmmc_base + SDMMC_BUSMODE);
++		} else {
++			reg_tmp = readb(priv->sdmmc_base + SDMMC_BUSMODE);
++			writeb(reg_tmp & (~BM_SD_OFF), priv->sdmmc_base + SDMMC_BUSMODE);
++		}
++	} else {
++		/* disable SD power */
++		/* VT3465 inverts the BM_SD_OFF bit usage */
++		if (priv->driver_version == WMT_MCI_3465)
++		{
++			reg_tmp = readb(priv->sdmmc_base + SDMMC_BUSMODE);
++			writeb(reg_tmp & (~BM_SD_OFF), priv->sdmmc_base + SDMMC_BUSMODE);
++		} else {
++			reg_tmp = readb(priv->sdmmc_base + SDMMC_BUSMODE);
++			writeb(reg_tmp | BM_SD_OFF, priv->sdmmc_base + SDMMC_BUSMODE);
++		}
++	}
++}
++
++/* Version detection code */
++static u32 wmt_mci_scc_id(void)
++{
++	void __iomem *scc_base;
++	u32 scc_id = 0;
++	scc_base = ioremap(0xD8120000, 4);
++	if (scc_base) {
++		scc_id = readl(scc_base);
++		iounmap(scc_base);
++	}
++	return scc_id;
++}
++
++static u32 wmt_mci_driver_version(void)
++{
++	u32 scc_id;
++	u16 hw_scc;
++	u16 chip_version;
++
++	scc_id = wmt_mci_scc_id();
++	hw_scc = (scc_id >> 16) & 0xFFFF;
++	chip_version = ((scc_id & 0xF00) >> 4) + 0x90 + ((scc_id & 0xFF) - 1);
++
++	switch (hw_scc) {
++	case 0x3426:
++		if (chip_version < 0xA1)
++			return WMT_MCI_3426_A0;
++		if (chip_version == 0xA1)
++			return WMT_MCI_3426_A1;
++		if (chip_version > 0xA1)
++			return WMT_MCI_3426_A2;
++		return 0;
++	case 0x3437:
++		if (chip_version < 0xA1)
++			return WMT_MCI_3437_A0;
++		if (chip_version >= 0xA1)
++			return WMT_MCI_3437_A1;
++		return 0;
++	case 0x3429:
++		return WMT_MCI_3429;
++	case 0x3451:
++		if (chip_version < 0xA1)
++			return WMT_MCI_3451_A0;
++		return 0;
++	case 0x3465:
++		return WMT_MCI_3465;
++	default:
++		return 0;
++	}
++}
++
++/* End version detection code */
++
++static void wmt_mci_read_response(struct mmc_host *mmc)
++{
++	struct wmt_mci_priv *priv;
++	int idx1, idx2;
++	u8 tmp_resp;
++	u32 response;
++
++	priv = mmc_priv(mmc);
++
++	for (idx1 = 0; idx1 < 4; idx1++) {
++		response = 0;
++		for (idx2 = 0; idx2 < 4; idx2++) {
++			if ((idx1 == 3) && (idx2 == 3))
++				tmp_resp = readb(priv->sdmmc_base + SDMMC_RSP);
++			else
++				tmp_resp = readb(priv->sdmmc_base + SDMMC_RSP + (idx1*4) +
++								idx2 + 1);
++			response |= (tmp_resp << (idx2 * 8));
++		}
++		priv->cmd->resp[idx1] = cpu_to_be32(response);
++	}
++}
++
++static void wmt_mci_start_command(struct wmt_mci_priv *priv)
++{
++	u32 reg_tmp;
++
++	/* start command */
++	reg_tmp = readb(priv->sdmmc_base + SDMMC_CTLR);
++	writeb(reg_tmp | CTLR_CMD_START, priv->sdmmc_base + SDMMC_CTLR);
++}
++
++static int wmt_mci_send_command(struct mmc_host *mmc, u8 command, u8 cmdtype,
++		u32 arg, u8 rsptype)
++{
++	struct wmt_mci_priv *priv;
++	u32 reg_tmp;
++
++	priv = mmc_priv(mmc);
++
++	/* write command, arg, resptype registers */
++	writeb(command, priv->sdmmc_base + SDMMC_CMD);
++	writel(arg, priv->sdmmc_base + SDMMC_ARG);
++	writeb(rsptype, priv->sdmmc_base + SDMMC_RSPTYPE);
++
++	/* reset response FIFO */
++	reg_tmp = readb(priv->sdmmc_base + SDMMC_CTLR);
++	writeb(reg_tmp | CTLR_FIFO_RESET, priv->sdmmc_base + SDMMC_CTLR);
++
++	/* ensure clock enabled - VT3465 */
++	wmt_set_sd_power(priv, WMT_SD_POWER_ON);
++
++	/* clear status bits */
++	writeb(0xFF, priv->sdmmc_base + SDMMC_STS0);
++	writeb(0xFF, priv->sdmmc_base + SDMMC_STS1);
++	writeb(0xFF, priv->sdmmc_base + SDMMC_STS2);
++	writeb(0xFF, priv->sdmmc_base + SDMMC_STS3);
++
++	/* set command type */
++	reg_tmp = readb(priv->sdmmc_base + SDMMC_CTLR);
++	writeb((reg_tmp & 0x0F) | (cmdtype << 4), priv->sdmmc_base +
++		SDMMC_CTLR);
++
++	return 0;
++}
++
++static void wmt_mci_disable_dma(struct wmt_mci_priv *priv)
++{
++	writel(DMA_ISR_INT_STS, priv->sdmmc_base + SDDMA_ISR);
++	writel(0, priv->sdmmc_base + SDDMA_IER);
++}
++
++static void wmt_complete_data_request(struct wmt_mci_priv *priv)
++{
++	struct mmc_request *req;
++	req = priv->req;
++
++	req->data->bytes_xfered = req->data->blksz * req->data->blocks;
++
++	/* unmap the DMA pages used for write data */
++	if (req->data->flags & MMC_DATA_WRITE)
++		dma_unmap_sg(mmc_dev(priv->mmc), req->data->sg,
++			req->data->sg_len, DMA_TO_DEVICE);
++	else
++		dma_unmap_sg(mmc_dev(priv->mmc), req->data->sg,
++			req->data->sg_len, DMA_FROM_DEVICE);
++
++	/* Check if the DMA ISR returned a data error */
++	if ((req->cmd->error) || (req->data->error))
++		mmc_request_done(priv->mmc, req);
++	else {
++		wmt_mci_read_response(priv->mmc);
++		if (!req->data->stop)
++			/* single-block read/write requests end here*/
++			mmc_request_done(priv->mmc, req);
++		else {
++			/*
++			 * we change the priv->cmd variable so the response is stored
++			 * in the stop struct rather than the original calling command
++			 * struct
++			 */
++			priv->comp_cmd = &priv->cmdcomp;
++			init_completion(priv->comp_cmd);
++			priv->cmd = req->data->stop;
++			wmt_mci_send_command(priv->mmc, req->data->stop->opcode, 7,
++							req->data->stop->arg, 9);
++			wmt_mci_start_command(priv);
++		}
++	}
++}
++
++static irqreturn_t wmt_mci_dma_isr(int irq_num, void *data)
++{
++	struct mmc_host *mmc;
++	struct wmt_mci_priv *priv;
++
++	int status;
++
++	priv = (struct wmt_mci_priv *)data;
++	mmc = priv->mmc;
++
++	status = readl(priv->sdmmc_base + SDDMA_CCR) & 0x0F;
++
++	if (status != DMA_CCR_EVT_SUCCESS) {
++		printk(KERN_ERR "[MMC/SD] DMA Status = %d\n", status);
++		priv->req->data->error = -ETIMEDOUT;
++		complete(priv->comp_dma);
++		return IRQ_HANDLED;
++	}
++
++	priv->req->data->error = 0;
++
++	wmt_mci_disable_dma(priv);
++
++	complete(priv->comp_dma);
++
++	if (priv->comp_cmd)
++		if (completion_done(priv->comp_cmd))
++			/* if the command (reguler) interrupt has already completed,
++			 * finish off the request otherwise we wait for the command
++			 * interrupt and finish from there.
++			 */
++			wmt_complete_data_request(priv);
++
++	return IRQ_HANDLED;
++}
++
++static irqreturn_t wmt_mci_regular_isr(int irq_num, void *data)
++{
++	struct wmt_mci_priv *priv;
++	u32 status0;
++	u32 status1;
++	u32 status2;
++	u32 reg_tmp;
++	int cmd_done;
++
++	priv = (struct wmt_mci_priv *)data;
++	cmd_done = 0;
++	status0 = readb(priv->sdmmc_base + SDMMC_STS0);
++	status1 = readb(priv->sdmmc_base + SDMMC_STS1);
++	status2 = readb(priv->sdmmc_base + SDMMC_STS2);
++
++	/* Check for card insertion */
++	reg_tmp = readb(priv->sdmmc_base + SDMMC_INTMASK0);
++	if ((reg_tmp & INT0_DI_INT_EN) && (status0 & STS0_DEVICE_INS)) {
++		mmc_detect_change(priv->mmc, 0);
++		if (priv->cmd)
++			priv->cmd->error = -ETIMEDOUT;
++		if (priv->comp_cmd)
++			complete(priv->comp_cmd);
++		if (priv->comp_dma) {
++			wmt_mci_disable_dma(priv);
++			complete(priv->comp_dma);
++		}
++		writeb(STS0_DEVICE_INS, priv->sdmmc_base + SDMMC_STS0);
++		return IRQ_HANDLED;
++	}
++
++	if ((!priv->req->data) ||
++		((priv->req->data->stop) && (priv->cmd == priv->req->data->stop))) {
++		/* handle non-data & stop_transmission requests */
++		if (status1 & STS1_CMDRSP_DONE) {
++			priv->cmd->error = 0;
++			cmd_done = 1;
++		} else
++		if ((status1 & STS1_RSP_TIMEOUT) || (status1 & STS1_DATA_TIMEOUT)) {
++			priv->cmd->error = -ETIMEDOUT;
++			cmd_done = 1;
++		}
++		if (cmd_done) {
++			priv->comp_cmd = NULL;
++
++			if (!priv->cmd->error)
++				wmt_mci_read_response(priv->mmc);
++
++			priv->cmd = NULL;
++
++			/* All requests end here except single-block read/write */
++			mmc_request_done(priv->mmc, priv->req);
++		}
++	} else {
++		/* handle data requests */
++		if (status1 & STS1_CMDRSP_DONE) {
++			if (priv->cmd)
++				priv->cmd->error = 0;
++			if (priv->comp_cmd)
++				complete(priv->comp_cmd);
++		}
++
++		if ((status1 & STS1_RSP_TIMEOUT) || (status1 & STS1_DATA_TIMEOUT)) {
++			if (priv->cmd)
++				priv->cmd->error = -ETIMEDOUT;
++			if (priv->comp_cmd)
++				complete(priv->comp_cmd);
++			if (priv->comp_dma) {
++				wmt_mci_disable_dma(priv);
++				complete(priv->comp_dma);
++			}
++		}
++
++		if (priv->comp_dma)
++			/* if the dma interrupt has already completed, finish off the
++			 * request otherwise we wait for the DMA interrupt and finish
++			 * from there.
++			 */
++			if (completion_done(priv->comp_dma))
++				wmt_complete_data_request(priv);
++	}
++
++	writeb(status0, priv->sdmmc_base + SDMMC_STS0);
++	writeb(status1, priv->sdmmc_base + SDMMC_STS1);
++	writeb(status2, priv->sdmmc_base + SDMMC_STS2);
++
++	return IRQ_HANDLED;
++}
++
++static void wmt_reset_hardware(struct mmc_host *mmc)
++{
++	struct wmt_mci_priv *priv;
++	u32 reg_tmp;
++
++	priv = mmc_priv(mmc);
++
++	/* reset controller */
++	reg_tmp = readb(priv->sdmmc_base + SDMMC_BUSMODE);
++	writeb(reg_tmp | BM_SOFT_RESET, priv->sdmmc_base + SDMMC_BUSMODE);
++
++	/* reset response FIFO */
++	reg_tmp = readb(priv->sdmmc_base + SDMMC_CTLR);
++	writeb(reg_tmp | CTLR_FIFO_RESET, priv->sdmmc_base + SDMMC_CTLR);
++
++	/* enable GPI pin to detect card - necessary??? */
++	writew(BLKL_INT_ENABLE | BLKL_GPI_CD, priv->sdmmc_base + SDMMC_BLKLEN);
++
++	/* clear interrupt status */
++	writeb(0xFF, priv->sdmmc_base + SDMMC_STS0);
++	writeb(0xFF, priv->sdmmc_base + SDMMC_STS1);
++
++	/* setup interrupts */
++	writeb(INT0_CD_INT_EN | INT0_DI_INT_EN, priv->sdmmc_base +
++		SDMMC_INTMASK0);
++	writeb(INT1_DATA_TOUT_INT_EN | INT1_CMD_RES_TRAN_DONE_INT_EN |
++		INT1_CMD_RES_TOUT_INT_EN, priv->sdmmc_base + SDMMC_INTMASK1);
++
++	/* set the DMA timeout */
++	writew(8191, priv->sdmmc_base + SDMMC_DMATIMEOUT);
++
++	/* auto clock freezing enable */
++	reg_tmp = readb(priv->sdmmc_base + SDMMC_STS2);
++	writeb(reg_tmp | STS2_DIS_FORCECLK, priv->sdmmc_base + SDMMC_STS2);
++
++	/* set a default clock speed of 400Khz */
++	wmt_mci_clk_set_rate(400000);
++}
++
++static int wmt_dma_init(struct mmc_host *mmc)
++{
++	struct wmt_mci_priv *priv;
++
++	priv = mmc_priv(mmc);
++
++	writel(DMA_GCR_SOFT_RESET, priv->sdmmc_base + SDDMA_GCR);
++	writel(DMA_GCR_DMA_EN, priv->sdmmc_base + SDDMA_GCR);
++	if ((readl(priv->sdmmc_base + SDDMA_GCR) & DMA_GCR_DMA_EN) != 0)
++		return 0;
++	else
++		return 1;
++}
++
++static void wmt_dma_init_descriptor(struct wmt_dma_descriptor *desc,
++			u16 req_count, u32 buffer_addr, u32 branch_addr, int end)
++{
++	desc->flags = 0x40000000 | req_count;
++	if (end)
++		desc->flags |= 0x80000000;
++	desc->data_buffer_addr = buffer_addr;
++	desc->branch_addr = branch_addr;
++}
++
++#define PDMA_READ	0x00
++#define PDMA_WRITE	0x01
++
++static void wmt_dma_config(struct mmc_host *mmc, u32 descaddr, u8 dir)
++{
++	struct wmt_mci_priv *priv;
++	u32 reg_tmp;
++
++	priv = mmc_priv(mmc);
++
++	/* Enable DMA Interrupts */
++	writel(DMA_IER_INT_EN, priv->sdmmc_base + SDDMA_IER);
++
++	/* Write DMA Descriptor Pointer Register */
++	writel(descaddr, priv->sdmmc_base + SDDMA_DESPR);
++
++	writel(0x00, priv->sdmmc_base + SDDMA_CCR);
++
++	if (dir == PDMA_WRITE) {
++		reg_tmp = readl(priv->sdmmc_base + SDDMA_CCR);
++		writel(reg_tmp & DMA_CCR_IF_TO_PERIPHERAL, priv->sdmmc_base +
++				SDDMA_CCR);
++	} else {
++		reg_tmp = readl(priv->sdmmc_base + SDDMA_CCR);
++		writel(reg_tmp | DMA_CCR_PERIPHERAL_TO_IF, priv->sdmmc_base +
++				SDDMA_CCR);
++	}
++}
++
++static void wmt_dma_start(struct wmt_mci_priv *priv)
++{
++	u32 reg_tmp;
++
++	reg_tmp = readl(priv->sdmmc_base + SDDMA_CCR);
++	writel(reg_tmp | DMA_CCR_RUN, priv->sdmmc_base + SDDMA_CCR);
++}
++
++static void wmt_mci_request(struct mmc_host *mmc, struct mmc_request *req)
++{
++	struct wmt_mci_priv *priv;
++	struct wmt_dma_descriptor *desc;
++	u8 command;
++	u8 cmdtype;
++	u32 arg;
++	u8 rsptype;
++	u32 reg_tmp;
++
++	struct scatterlist *sg;
++	int i;
++	int sg_cnt;
++	int offset;
++	u32 dma_address;
++	int desc_cnt;
++
++	priv = mmc_priv(mmc);
++	priv->req = req;
++
++	/*
++	 * Use the cmd variable to pass a pointer to the resp[] structure
++	 * This is required on multi-block requests to pass the pointer to the
++	 * stop command
++	 */
++	priv->cmd = req->cmd;
++
++	command = req->cmd->opcode;
++	arg = req->cmd->arg;
++	rsptype = mmc_resp_type(req->cmd);
++	cmdtype = 0;
++
++	/* rsptype=7 only valid for SPI commands - should be =2 for SD */
++	if (rsptype == 7)
++		rsptype = 2;
++	/* rsptype=21 is R1B, convert for controller */
++	if (rsptype == 21)
++		rsptype = 9;
++
++	if (!req->data) {
++		wmt_mci_send_command(mmc, command, cmdtype, arg, rsptype);
++		wmt_mci_start_command(priv);
++		/* completion is now handled in the regular_isr() */
++	}
++	if (req->data) {
++		priv->comp_cmd = &priv->cmdcomp;
++		init_completion(priv->comp_cmd);
++
++		wmt_dma_init(mmc);
++
++		/* set controller data length */
++		reg_tmp = readw(priv->sdmmc_base + SDMMC_BLKLEN);
++		writew((reg_tmp & 0xF800) | (req->data->blksz - 1),
++			priv->sdmmc_base + SDMMC_BLKLEN);
++
++		/* set controller block count */
++		writew(req->data->blocks, priv->sdmmc_base + SDMMC_BLKCNT);
++
++		desc = (struct wmt_dma_descriptor *)priv->dma_desc_buffer;
++
++		if (req->data->flags & MMC_DATA_WRITE) {
++			sg_cnt = dma_map_sg(mmc_dev(mmc), req->data->sg,
++						req->data->sg_len, DMA_TO_DEVICE);
++			cmdtype = 1;
++			if (req->data->blocks > 1)
++				cmdtype = 3;
++		} else {
++			sg_cnt = dma_map_sg(mmc_dev(mmc), req->data->sg,
++						req->data->sg_len, DMA_FROM_DEVICE);
++			cmdtype = 2;
++			if (req->data->blocks > 1)
++				cmdtype = 4;
++		}
++
++		dma_address = priv->dma_desc_device_addr + 16;
++		desc_cnt = 0;
++
++		for_each_sg(req->data->sg, sg, sg_cnt, i) {
++			offset = 0;
++			while (offset < sg_dma_len(sg)) {
++				wmt_dma_init_descriptor(desc, req->data->blksz,
++						sg_dma_address(sg)+offset, dma_address, 0);
++				desc++;
++				desc_cnt++;
++				offset += req->data->blksz;
++				dma_address += 16;
++				if (desc_cnt == req->data->blocks)
++					break;
++			}
++		}
++		desc--;
++		desc->flags |= 0x80000000;
++
++		if (req->data->flags & MMC_DATA_WRITE)
++			wmt_dma_config(mmc, priv->dma_desc_device_addr, PDMA_WRITE);
++		else
++			wmt_dma_config(mmc, priv->dma_desc_device_addr, PDMA_READ);
++
++		wmt_mci_send_command(mmc, command, cmdtype, arg, rsptype);
++
++		priv->comp_dma = &priv->datacomp;
++		init_completion(priv->comp_dma);
++
++		wmt_dma_start(priv);
++		wmt_mci_start_command(priv);
++	}
++}
++
++static void wmt_mci_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
++{
++	struct wmt_mci_priv *priv;
++	u32 reg_tmp;
++
++	priv = mmc_priv(mmc);
++
++	if (ios->power_mode == MMC_POWER_UP) {
++		wmt_reset_hardware(mmc);
++
++		wmt_set_sd_power(priv, WMT_SD_POWER_ON);
++	}
++	if (ios->power_mode == MMC_POWER_OFF) {
++		wmt_set_sd_power(priv, WMT_SD_POWER_OFF);
++	}
++
++	wmt_mci_clk_set_rate(ios->clock);
++
++	switch (ios->bus_width) {
++	case MMC_BUS_WIDTH_8:
++		reg_tmp = readb(priv->sdmmc_base + SDMMC_EXTCTRL);
++		writeb(reg_tmp | 0x04, priv->sdmmc_base + SDMMC_EXTCTRL);
++		break;
++	case MMC_BUS_WIDTH_4:
++		reg_tmp = readb(priv->sdmmc_base + SDMMC_BUSMODE);
++		writeb(reg_tmp | BM_FOURBIT_MODE, priv->sdmmc_base + SDMMC_BUSMODE);
++
++		reg_tmp = readb(priv->sdmmc_base + SDMMC_EXTCTRL);
++		writeb(reg_tmp & 0xFB, priv->sdmmc_base + SDMMC_EXTCTRL);
++		break;
++	case MMC_BUS_WIDTH_1:
++		reg_tmp = readb(priv->sdmmc_base + SDMMC_BUSMODE);
++		writeb(reg_tmp & BM_ONEBIT_MASK, priv->sdmmc_base + SDMMC_BUSMODE);
++
++		reg_tmp = readb(priv->sdmmc_base + SDMMC_EXTCTRL);
++		writeb(reg_tmp & 0xFB, priv->sdmmc_base + SDMMC_EXTCTRL);
++		break;
++	}
++}
++
++static int wmt_mci_get_ro(struct mmc_host *mmc)
++{
++	struct wmt_mci_priv *priv;
++
++	priv = mmc_priv(mmc);
++	return ((readb(priv->sdmmc_base + SDMMC_STS0) >> 1) ^ 1) & 1;
++}
++
++static int wmt_mci_get_cd(struct mmc_host *mmc)
++{
++	struct wmt_mci_priv *priv;
++	u32 status0;
++
++	priv = mmc_priv(mmc);
++	status0 = readb(priv->sdmmc_base + SDMMC_STS0);
++	if (priv->driver_version >= WMT_MCI_3426_A0)
++	{
++		if (status0 & STS0_CD_GPI)
++			return 0;
++		else
++			return 1;
++	} else {
++		if (status0 & STS0_CD_GPI)
++			return 1;
++		else
++			return 0;
++	}
++}
++
++static struct mmc_host_ops wmt_mci_ops = {
++	.request = wmt_mci_request,
++	.set_ios = wmt_mci_set_ios,
++	.get_ro = wmt_mci_get_ro,
++	.get_cd = wmt_mci_get_cd,
++};
++
++static int __init wmt_mci_probe(struct platform_device *pdev)
++{
++	struct mmc_host *mmc;
++	struct wmt_mci_priv *priv;
++	struct resource *res;
++	int ret;
++	int platform_irq1;
++	int platform_irq2;
++	u32 driver_version;
++	void __iomem *gpio_base = 0;
++	u32 reg_tmp;
++
++	driver_version = wmt_mci_driver_version();
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res) {
++		printk(KERN_ERR "[MMC/SD] Getting platform resource failed: MMIO\n");
++		return -ENXIO;
++	}
++
++	if (!request_mem_region(res->start,
++			res->end - res->start + 1, DRIVER_NAME)) {
++		printk(KERN_ERR "[MMC/SD] Getting memory region failed\n");
++		return -EBUSY;
++	}
++
++	/*
++	 * Two irqs should be defined, first for regular ISR, second for DMA ISR
++	 */
++	platform_irq1 = platform_get_irq(pdev, 0);
++	platform_irq2 = platform_get_irq(pdev, 1);
++
++	if ((platform_irq1 == NO_IRQ) | (platform_irq2 == NO_IRQ)) {
++		printk(KERN_ERR "[MMC/SD] Getting platform IRQs failed!\n");
++		ret = -ENXIO;
++		goto fail1;
++	}
++
++	mmc = mmc_alloc_host(sizeof(struct wmt_mci_priv), &pdev->dev);
++	if (!mmc) {
++		printk(KERN_ERR "[MMC/SD] Failed to allocate mmc_host\n");
++		ret = -ENOMEM;
++		goto fail1;
++	}
++
++	mmc->ops = &wmt_mci_ops;
++	mmc->f_min = 390425;
++	mmc->f_max = 50000000;
++	mmc->ocr_avail = MMC_VDD_32_33 | MMC_VDD_33_34;
++	mmc->caps = MMC_CAP_4_BIT_DATA | MMC_CAP_MMC_HIGHSPEED |
++			MMC_CAP_SD_HIGHSPEED;
++	mmc->max_seg_size = 65024;
++	mmc->max_segs = 128;
++	mmc->max_req_size = (16*512*mmc->max_segs);
++	mmc->max_blk_size = 2048;
++	mmc->max_blk_count = mmc->max_req_size / 512;
++
++	priv = mmc_priv(mmc);
++	priv->mmc = mmc;
++
++	priv->driver_version = driver_version;
++
++	/* Enable SD1 pin sharing - 3465 */
++	if (driver_version == WMT_MCI_3465)
++	{
++		gpio_base = ioremap(0xD8110000, 0x500);
++		if (!gpio_base)
++		{
++			printk(KERN_ERR "[MMC/SD] Failed to map GPIO IO space\n");
++			ret = -ENOMEM;
++			goto fail2;
++		}
++		/* PIN_SHARING_SEL */
++		reg_tmp = readl(gpio_base + 0x200);
++		writel(reg_tmp | 0x02, gpio_base + 0x200);
++		/* PULL_CTRL GP3 */
++		reg_tmp = readb(gpio_base + 0x4C3);
++		writeb(reg_tmp | 0x20, gpio_base + 0x4C3);
++		/* PULL_EN GP3 */
++		reg_tmp = readb(gpio_base + 0x483);
++		writeb(reg_tmp | 0x20, gpio_base + 0x483);
++	}
++
++	priv->sdmmc_base = ioremap(res->start, res->end - res->start + 1);
++	if (!priv->sdmmc_base) {
++		printk(KERN_ERR "[MMC/SD] Failed to map IO space\n");
++		ret = -ENOMEM;
++		goto fail2;
++	}
++
++	priv->irq_regular = platform_irq1;
++	priv->irq_dma = platform_irq2;
++
++	ret = request_irq(platform_irq1, wmt_mci_regular_isr, 0, "sdmmc", priv);
++	if (ret) {
++		printk(KERN_ERR "[MMC/SD] Failed to register interrupt handler \
++				(regular)\n");
++		goto fail3;
++	}
++
++	ret = request_irq(platform_irq2, wmt_mci_dma_isr, 32, "sdmmc", priv);
++	if (ret) {
++		printk(KERN_ERR "[MMC/SD] Failed to register interrupt handler \
++				(DMA)\n");
++		goto fail4;
++	}
++
++	/* alloc some DMA buffers for descriptors/transfers */
++	priv->dma_desc_buffer = dma_alloc_coherent(&pdev->dev,
++			mmc->max_blk_count * 16, &priv->dma_desc_device_addr, 208);
++	if (!priv->dma_desc_buffer) {
++		printk(KERN_ERR "[MMC/SD] Failed to allocate DMA descriptor \
++				memory\n");
++		ret = -EPERM;
++		goto fail5;
++	}
++
++	platform_set_drvdata(pdev, mmc);
++
++//	priv->clk_sdmmc = clk_get(NULL, "sdmmc");
++//	clk_enable(priv->clk_sdmmc);
++	pmc_base = ioremap(0xD8130000, 0x380);
++	if (!pmc_base) {
++		printk(KERN_ERR "[MMC/SD] Failed to remap power management \
++				registers\n");
++		ret = -ENOMEM;
++		goto fail5;
++	}
++	wmt_mci_clk_enable();
++
++	/* Configure GPIO7 as a low output */
++	gpio_request(7, "gpio-sd");
++	gpio_direction_output(7, 0);
++
++	/* configure the controller to a known 'ready' state */
++	wmt_reset_hardware(mmc);
++
++	if (driver_version == WMT_MCI_3465)
++	{
++		/* CTRL GP3 */
++		reg_tmp = readb(gpio_base + 0x43);
++		writeb(reg_tmp & ~0x20, gpio_base + 0x43);
++
++		iounmap(gpio_base);
++	}
++
++	mmc_add_host(mmc);
++
++	printk(KERN_INFO "[MMC/SD] WMT MCI Controller registered \
++			(DriverVersion=%d)\n", driver_version);
++
++	return 0;
++fail5:
++	free_irq(platform_irq1, priv);
++fail4:
++	free_irq(platform_irq1, priv);
++fail3:
++	iounmap(priv->sdmmc_base);
++fail2:
++	mmc_free_host(mmc);
++fail1:
++	release_mem_region(res->start, res->end - res->start + 1);
++	return ret;
++}
++
++#ifdef CONFIG_PM
++static int wmt_mci_suspend(struct platform_device *pdev, pm_message_t state)
++{
++	u32 reg_tmp;
++	struct mmc_host *mmc;
++	struct wmt_mci_priv *priv;
++	int ret;
++
++	mmc = platform_get_drvdata(pdev);
++	if (!mmc)
++		return 0;
++
++	priv = mmc_priv(mmc);
++	ret = mmc_suspend_host(mmc);
++	if (!ret) {
++		reg_tmp = readb(priv->sdmmc_base + SDMMC_BUSMODE);
++		writeb(reg_tmp | BM_SOFT_RESET, priv->sdmmc_base + SDMMC_BUSMODE);
++	
++		reg_tmp = readw(priv->sdmmc_base + SDMMC_BLKLEN);
++		writew(reg_tmp & 0x5FFF, priv->sdmmc_base + SDMMC_BLKLEN);
++
++		writeb(0xFF, priv->sdmmc_base + SDMMC_STS0);
++		writeb(0xFF, priv->sdmmc_base + SDMMC_STS1);
++	}
++	/* disable SD clock */
++	return ret;
++}
++
++static int wmt_mci_resume(struct platform_device *pdev)
++{
++	u32 reg_tmp;
++	struct mmc_host *mmc;
++	struct wmt_mci_priv *priv;
++	int ret = 0;
++
++	mmc = platform_get_drvdata(pdev);
++	if (mmc) {
++		priv = mmc_priv(mmc);
++		/* enable SD clock */
++
++		reg_tmp = readb(priv->sdmmc_base + SDMMC_BUSMODE);
++		writeb(reg_tmp | BM_SOFT_RESET, priv->sdmmc_base + SDMMC_BUSMODE);
++
++		reg_tmp = readw(priv->sdmmc_base + SDMMC_BLKLEN);
++		writew(reg_tmp | (BLKL_GPI_CD | BLKL_INT_ENABLE), priv->sdmmc_base + SDMMC_BLKLEN);
++
++		reg_tmp = readb(priv->sdmmc_base + SDMMC_INTMASK0);
++		writeb(reg_tmp | INT0_DI_INT_EN, priv->sdmmc_base + SDMMC_INTMASK0);
++
++		ret = mmc_resume_host(mmc);
++	}
++
++	return ret;
++}
++#else
++
++#define wmt_mci_suspend NULL
++#define wmt_mci_resume NULL
++
++#endif
++
++static int __exit wmt_mci_remove(struct platform_device *pdev)
++{
++	struct mmc_host *mmc;
++	struct wmt_mci_priv *priv;
++	struct resource *res;
++	u32 reg_tmp;
++
++	/* TODO: temporary clock code */
++	if (pmc_base)
++		iounmap(pmc_base);
++
++	mmc = platform_get_drvdata(pdev);
++	priv = mmc_priv(mmc);
++
++	/* reset SD controller */
++	reg_tmp = readb(priv->sdmmc_base + SDMMC_BUSMODE);
++	writel(reg_tmp | BM_SOFT_RESET, priv->sdmmc_base + SDMMC_BUSMODE);
++	reg_tmp = readw(priv->sdmmc_base + SDMMC_BLKLEN);
++	writew(reg_tmp & ~(0xA000), priv->sdmmc_base + SDMMC_BLKLEN);
++	writeb(0xFF, priv->sdmmc_base + SDMMC_STS0);
++	writeb(0xFF, priv->sdmmc_base + SDMMC_STS1);
++
++	/* release the dma buffers */
++	dma_free_coherent(&pdev->dev, priv->mmc->max_blk_count * 16,
++			priv->dma_desc_buffer, priv->dma_desc_device_addr);
++
++	mmc_remove_host(mmc);
++
++	free_irq(priv->irq_regular, priv);
++	free_irq(priv->irq_dma, priv);
++
++	iounmap(priv->sdmmc_base);
++
++//	clk_disable(priv->clk_sdmmc);
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	release_mem_region(res->start, res->end - res->start + 1);
++
++	mmc_free_host(mmc);
++
++	platform_set_drvdata(pdev, NULL);
++
++	printk(KERN_INFO "[MMC/SD] WMT MCI device removed\n");
++
++	return 0;
++}
++
++
++static struct platform_driver wmt_mci_driver = {
++	.remove = __exit_p(wmt_mci_remove),
++	.suspend = wmt_mci_suspend,
++	.resume = wmt_mci_resume,
++	.driver = {
++		.name = DRIVER_NAME,
++		.owner = THIS_MODULE,
++	},
++};
++
++static int __init wmt_mci_init(void)
++{
++	return platform_driver_probe(&wmt_mci_driver, &wmt_mci_probe);
++}
++
++static void __exit wmt_mci_exit(void)
++{
++	platform_driver_unregister(&wmt_mci_driver);
++}
++
++module_init(wmt_mci_init);
++module_exit(wmt_mci_exit);
++
++MODULE_DESCRIPTION("WMT MMC/SD Driver");
++MODULE_AUTHOR("Tony Prisk");
++MODULE_LICENSE("GPL");
++MODULE_ALIAS("platform:wmt-sdmmc");
+diff -Naur linux-3.4.orig/drivers/mtd/nand/Kconfig linux-3.4/drivers/mtd/nand/Kconfig
+--- linux-3.4.orig/drivers/mtd/nand/Kconfig	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/drivers/mtd/nand/Kconfig	2019-03-06 17:20:01.000000000 -0700
+@@ -567,4 +567,11 @@
+ 	  Enables support for NAND Flash chips on the ST Microelectronics
+ 	  Flexible Static Memory Controller (FSMC)
+ 
++config MTD_NAND_WMT
++	tristate "Support for NAND on VIA/WonderMedia SoC's"
++	depends on ARCH_VT8500
++	help
++	  This enables support for the NAND controller found in VIA VT8500,
++	  WonderMedia WM8505 and possibly other similar chips.
++
+ endif # MTD_NAND
+diff -Naur linux-3.4.orig/drivers/mtd/nand/Makefile linux-3.4/drivers/mtd/nand/Makefile
+--- linux-3.4.orig/drivers/mtd/nand/Makefile	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/drivers/mtd/nand/Makefile	2019-03-06 17:20:01.000000000 -0700
+@@ -51,5 +51,6 @@
+ obj-$(CONFIG_MTD_NAND_RICOH)		+= r852.o
+ obj-$(CONFIG_MTD_NAND_JZ4740)		+= jz4740_nand.o
+ obj-$(CONFIG_MTD_NAND_GPMI_NAND)	+= gpmi-nand/
++obj-$(CONFIG_MTD_NAND_WMT)		+= wmt_nand.o
+ 
+ nand-objs := nand_base.o nand_bbt.o
+diff -Naur linux-3.4.orig/drivers/mtd/nand/wmt_nand.c linux-3.4/drivers/mtd/nand/wmt_nand.c
+--- linux-3.4.orig/drivers/mtd/nand/wmt_nand.c	1969-12-31 17:00:00.000000000 -0700
++++ linux-3.4/drivers/mtd/nand/wmt_nand.c	2019-03-06 17:20:01.000000000 -0700
+@@ -0,0 +1,1202 @@
++/**
++ *
++ * Copyright (C) 2008 WonderMedia Technologies, Inc.
++ * Copyright (C) 2010 Alexey Charkov <alchark@gmail.com>
++ * Copyright (C) 2011 Darek Marcinkiewicz <reksio@newterm.pl>
++ *
++ * This software is licensed under the terms of the GNU General Public
++ * License version 2, as published by the Free Software Foundation, and
++ * may be copied, distributed, and modified under those terms.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ */
++
++/*
++ * This is device driver for the NAND flash controller present
++ * on WonderMedia VT8500/WM8505 SOCs.
++ */
++
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/err.h>
++#include <linux/clk.h>
++#include <linux/io.h>
++#include <linux/interrupt.h>
++#include <linux/delay.h>
++#include <linux/sched.h>
++#include <linux/mtd/nand.h>
++#include <linux/dma-mapping.h>
++#include <linux/mtd/partitions.h>
++#include <linux/slab.h>
++
++#define VT8500_DATAPORT				0x00
++#define VT8500_MISC_STAT_PORT			0x28
++#define VT8500_COMMAND_READY			0x04
++#define VT8500_TRANSFER_IN_PROGRESS		0x02
++#define VT8500_READY_FLAG			0x01
++
++#define VT8500_SMC_DMA_COUNTER			0x30
++
++#define VT8500_ECC_BCH_CTRL			0x8c
++#define VT8500_ECC_TYPE_MASK			0xfffffff0
++#define VT8500_READ_RESUME			(1 << 8)
++#define VT8500_ECC_1BIT				0
++#define VT8500_ECC_4BIT				1
++#define VT8500_ECC_8BIT				2
++#define VT8500_ECC_12BIT			3
++#define VT8500_ECC_16BIT			4
++#define VT8500_ECC_24BITPER1K			5
++#define VT8500_ECC_40BITPER1K			6
++#define VT8500_ECC_44BITPER1K			7
++#define VT8500_ECC_44BIT			8
++
++#define VT8500_ECC_BCH_INT_MASK			0x90
++#define VT8500_ECC_BCH_INT_STAT1		0x94
++#define VT8500_ECC_BCH_INT_STAT2		0x98
++
++#define VT8500_ECC_BCH_ERR_POS1			0x9c
++#define VT8500_ECC_BCH_ERR_POS2			0xa0
++#define VT8500_NAND_TYPE_SEL			0x48
++
++#define VT8500_READ_CYCLE_PULE_CTRL		0x50
++#define VT8500_PULE_DIVISOR_MASK		0xffff0000;
++#define VT8500_PULE_DIVISOR_INITIAL_VALUE_MASK	0x2424
++
++#define VT8500_MISC_CTRL			0x54
++#define VT8500_SOFTWARE_ECC			0x4
++
++#define VT8500_PAGESIZE_DIVIDER_SEL		0x5c
++#define VT8500_CHIP_ENABLE_CTRL			0x44
++
++#define VT8500_DMA_COUNTER			0x20
++
++/*
++ * Control Registers
++ */
++#define VT8500_COMCTRL				0x04
++#define VT8500_COMPORT0				0x08
++#define VT8500_COMPORT1_2			0x0c
++#define VT8500_COMPORT3_4			0x10
++#define VT8500_COMPORT5_6			0x14
++#define VT8500_COMPORT7				0x18
++#define VT8500_COMPORT8_9			0x1c
++
++#define NFC_DMA_GCR				0x100
++#define NFC_DMA_IER				0x104
++#define NFC_DMA_ISR				0x108
++#define NFC_DMA_DESPR				0x10C
++#define NFC_DMA_RBR				0x110
++#define NFC_DMA_BAR				0x118
++#define NFC_DMA_DAR				0x114
++#define NFC_DMA_CPR				0x11C
++#define NFC_DMA_CCR				0x120
++
++#define VT8500_SMC_ENABLE			0x24
++
++/*
++ *  Status Control Registers
++ */
++#define VT8500_HOST_STAT_CHANGE			0x2c
++#define VT8500_BUSY_2_READY			0x8
++
++#define ECC_FIFO_0				0xc0
++#define ECC_FIFO_1				0xc4
++#define ECC_FIFO_2				0xc8
++#define ECC_FIFO_3				0xcc
++#define ECC_FIFO_4				0xd0
++#define ECC_FIFO_5				0xd4
++#define ECC_FIFO_6				0xd8
++#define ECC_FIFO_7				0xdc
++#define ECC_FIFO_8				0xe0
++#define ECC_FIFO_9				0xe4
++#define ECC_FIFO_a				0xe8
++#define ECC_FIFO_b				0xec
++#define ECC_FIFO_c				0xf0
++#define ECC_FIFO_d				0xf4
++#define ECC_FIFO_e				0xf8
++#define ECC_FIFO_f				0xfc
++
++/*
++ *	NAND PDMA - DMA_CCR : DMAContext Control Register for Channel 0
++ */
++#define VT8500_NAND_READ			0x00
++#define VT8500_NAND_WRITE			0x01
++#define VT8500_NAND_CCR_RUN			0x00000080
++#define VT8500_NAND_CCR_IF_TO_PERIPHERAL	0x00000000
++#define VT8500_NAND_CCR_PERIPHERAL_TO_IF	0x00400000
++#define VT8500_NAND_CCR_EVTCODE			0x0000000f
++#define VT8500_NAND_CCR_EVT_NO_STATUS		0x00000000
++#define VT8500_NAND_CCR_EVT_FF_UNDERRUN		0x00000001
++#define VT8500_NAND_CCR_EVT_FF_OVERRUN		0x00000002
++#define VT8500_NAND_CCR_EVT_DESP_READ		0x00000003
++#define VT8500_NAND_CCR_EVT_DATA_RW		0x00000004
++#define VT8500_NAND_CCR_EVT_EARLY_END		0x00000005
++#define VT8500_NAND_CCR_EVT_SUCCESS		0x0000000f
++
++#define VT8500_NAND_IER_INT_STS			0x00000001
++	/* [0] -- DMA interrupt status */
++#define VT8500_NAND_GCR_DMA_EN			0x00000001
++	/* [0] -- DMA controller enable */
++#define VT8500_NAND_GCR_SOFTRESET		0x00000100
++	/* [8] -- Software rest */
++
++#define VT8500_DMA_BUFFER_SIZE			4096
++
++#define VT8500_ECC_CORRECTION_FINISHED		0x100
++#define VT8500_ECC_ERROR			0x1
++#define VT8500_ECC_ERROR_OOB			(1 << 11)
++
++#define VT8500_COMMAND_NO_DATA			0x80
++#define VT8500_COMMAND_HAS_DATA			0x0
++
++#define VT8500_COMMAND_NAND_2_NFC		0x40
++#define VT8500_COMMAND_NFC_2_NAND		0x00
++
++#define VT8500_COMMAND_CYCLES_DMA		0
++#define VT8500_COMMAND_CYCLES_NONE		0
++#define VT8500_COMMAND_CYCLES_SINGLE		0x20
++
++#define VT8500_COMMAND_MULT_COMMANDS		0x10
++
++#define VT8500_TRIGGER_COMMAND			0x01
++
++#define VT8500_TYPE_SEL_CFG_WP_DISABLE		(1<<4)
++#define VT8500_TYPE_SEL_CFG_OLDDATA_E		(1<<2)
++#define VT8500_TYPE_SEL_CFG_WIDTH_8		0
++#define VT8500_TYPE_SEL_CFG_WIDTH_16		(1<<3)
++#define VT8500_TYPE_SEL_CFG_PAGE_512		0
++#define VT8500_TYPE_SEL_CFG_PAGE_2K		1
++#define VT8500_TYPE_SEL_CFG_PAGE_4K		2
++#define VT8500_TYPE_SEL_CFG_PAGE_8K		3
++#define VT8500_TYPE_SEL_CFG_DIRECT_MAP		(1<<5)
++#define VT8500_TYPE_SEL_CFG_CHECK_ALLFF		(1<<6)
++
++#define VT8500_PAGE_BLOCK_DIVISOR_MASK		0x000000e0
++#define VT8500_PAGE_BLOCK_DIVISOR_SHIFT		5
++#define VT8500_INTERRUPTS_ENABLE		0x101
++
++#define VT8500_INT1_REG				0x4c
++
++#define VT8500_DISABLE_MASKABLE_INTERRUPTS	0x40
++#define VT8500_DISABLE_BUSY_2_READY_INTERRUPT	0x08
++#define VT8500_DISABLE_UNCORRECTABLE_ERR_INTERRUPT	0x04
++#define VT8500_DISABLE_1BIT_ERROR_INTERRUPT	0x02
++#define VT8500_DISABLE_REDUNTANT_ERR_INTERRUPT	0x01
++
++#define VT8500_INT1_MASK  \
++	(VT8500_DISABLE_MASKABLE_INTERRUPTS | \
++	VT8500_DISABLE_UNCORRECTABLE_ERR_INTERRUPT | \
++	VT8500_DISABLE_REDUNTANT_ERR_INTERRUPT)
++
++#define PMPMB_ADDR				0x0204
++#define PMNAND_ADDR				0x0330
++#define PMCS_ADDR				0x0000
++#define PMCEU_ADDR				0x0254
++
++#define PLL_B_CLOCK_SPEED			25 /*Mhz*/
++#define NAND_MAX_CLOCK_SPEED			56 /*Mhz*/
++
++static struct nand_ecclayout vt8500_oobinfo = {
++	.eccbytes = 7,
++	.eccpos = {24, 25, 26, 27, 28, 29, 30},
++	.oobavail = 24,
++	.oobfree = { {0, 24} }
++};
++
++struct vt8500_dma_desc {
++	u32 req_count:16;
++	u32 i:1;
++	u32 r1:13;
++	u32 format:1;
++	u32 end:1;
++	u32 addr:32;
++	u32 branch_addr:32;
++	u32 r2:32;
++};
++
++struct vt8500_priv {
++	struct mtd_info mtd;
++	struct nand_chip nand;
++
++	struct device *device;
++
++	dma_addr_t dmaaddr;
++	unsigned char *dmabuf;
++
++	dma_addr_t dma_d_addr;
++	struct vt8500_dma_desc *dma_desc;
++
++	int dataptr;
++
++	int page;
++
++	int nand_irq;
++	int dma_irq;
++
++	unsigned long dma_status;
++
++	struct completion nand_complete;
++	struct completion dma_complete;
++
++	struct resource *nfc_mem_region;
++};
++
++static uint8_t vt8500_bbt_pattern[] = { 'B', 'b', 't', '0' };
++
++static struct nand_bbt_descr vt8500_bbt_descr = {
++	.options = NAND_BBT_LASTBLOCK | NAND_BBT_CREATE | NAND_BBT_WRITE
++	    | NAND_BBT_2BIT | NAND_BBT_VERSION | NAND_BBT_PERCHIP,
++	.offs = 9,
++	.len = 4,
++	.veroffs = 1,
++	.maxblocks = 4,
++	.pattern = vt8500_bbt_pattern,
++};
++
++static uint8_t vt8500_mirror_pattern[] = { '1', 't', 'b', 'B' };
++
++static struct nand_bbt_descr vt8500_bbt_mirror_descr = {
++	.options = NAND_BBT_LASTBLOCK | NAND_BBT_CREATE | NAND_BBT_WRITE
++	    | NAND_BBT_2BIT | NAND_BBT_VERSION | NAND_BBT_PERCHIP,
++	.offs = 9,
++	.len = 4,
++	.veroffs = 1,
++	.maxblocks = 4,
++	.pattern = vt8500_mirror_pattern,
++};
++
++struct vt8500_priv *vt8500_mtd_to_priv(struct mtd_info *mtd)
++{
++	return container_of(mtd, struct vt8500_priv, mtd);
++}
++
++int vt8500_get_bit(struct vt8500_priv *vt8500, int address, unsigned bit)
++{
++	return readl(vt8500->nand.IO_ADDR_R + address) & bit;
++}
++
++void vt8500_set_bit(struct vt8500_priv *vt8500, int address, unsigned val)
++{
++	unsigned long t = readl(vt8500->nand.IO_ADDR_R + address);
++	t |= val;
++	writel(t, vt8500->nand.IO_ADDR_R + address);
++}
++
++void vt8500_clear_bit(struct vt8500_priv *vt8500, int address, unsigned bit)
++{
++	unsigned long t = readl(vt8500->nand.IO_ADDR_R + address);
++	t &= ~bit;
++	writel(t, vt8500->nand.IO_ADDR_R + address);
++}
++
++static int vt8500_set_clock(struct vt8500_priv *vt8500)
++{
++	unsigned long clock_freq;
++	unsigned long divisor;
++	unsigned long mult;
++	unsigned long ptRP = 12000;
++	unsigned long ptRC = 25000;
++	unsigned long ptWP = 12000;
++	unsigned long ptWC = 25000;
++	unsigned long reg;
++	unsigned long pule_reg;
++	unsigned long min_val;
++
++	void __iomem *pmc_mem = ioremap(0xd8130000, 0x400);
++	BUG_ON(pmc_mem == NULL);
++
++	mult = readb(pmc_mem + PMPMB_ADDR) & 0x1f;
++	if (mult < 4)
++		clock_freq = PLL_B_CLOCK_SPEED;
++	else
++		clock_freq = mult * 2 * PLL_B_CLOCK_SPEED;
++
++	if (readb(pmc_mem + PMPMB_ADDR) & 0x100)
++		clock_freq /= 2;
++
++	dev_info(vt8500->device, "Clock frequency: %ld\n", clock_freq);
++
++	min_val = min(min(ptRP, ptRC), min(ptWP, ptWC));
++
++	divisor = clock_freq / NAND_MAX_CLOCK_SPEED + 1;
++
++	pule_reg = readl(vt8500->nand.IO_ADDR_R +
++		VT8500_READ_CYCLE_PULE_CTRL) & VT8500_PULE_DIVISOR_MASK;
++
++	reg = ptRP / min_val;
++	reg <<= 4;
++
++	reg |= ptRC / min_val;
++	reg <<= 4;
++
++	reg |= ptWP / min_val;
++	reg <<= 4;
++
++	reg |= ptWC / min_val;
++
++	dev_info(vt8500->device, "Setting divisor: %ld\n", divisor);
++
++	writel((divisor & 0x1FF), pmc_mem + PMNAND_ADDR);
++	while ((readl(pmc_mem + PMCS_ADDR)) & (1 << 25))
++		cpu_relax();
++	dev_info(vt8500->device, "Setting pule register value: %lx\n", reg);
++
++	writel(pule_reg | reg,
++	       vt8500->nand.IO_ADDR_R + VT8500_READ_CYCLE_PULE_CTRL);
++
++	iounmap(pmc_mem);
++
++	return 0;
++}
++
++void __iomem *vt8500_nand_addr_cycle_to_reg(struct vt8500_priv *vt8500,
++					    int cycle)
++{
++	u8 *addr_reg = vt8500->nand.IO_ADDR_R + VT8500_COMPORT1_2;
++	return addr_reg + 4 * (cycle / 2) + cycle % 2;
++}
++
++static int vt8500_set_addr(struct vt8500_priv *vt8500, int column,
++			   int page_addr)
++{
++	struct nand_chip *chip = &vt8500->nand;
++	int addr_cycle = 0;
++	u8 *addr_reg;
++
++	if (column != -1) {
++		addr_reg = vt8500_nand_addr_cycle_to_reg(vt8500, addr_cycle++);
++		writeb(column, addr_reg);
++		column >>= 8;
++
++		addr_reg = vt8500_nand_addr_cycle_to_reg(vt8500, addr_cycle++);
++		writeb(column, addr_reg);
++	}
++
++	if (page_addr != -1) {
++		addr_reg = vt8500_nand_addr_cycle_to_reg(vt8500, addr_cycle++);
++		writeb(page_addr, addr_reg);
++		page_addr >>= 8;
++
++		addr_reg = vt8500_nand_addr_cycle_to_reg(vt8500, addr_cycle++);
++		writeb(page_addr, addr_reg);
++
++		if (chip->chip_shift - chip->page_shift > 16) {
++			page_addr >>= 8;
++			addr_reg =
++			    vt8500_nand_addr_cycle_to_reg(vt8500, addr_cycle++);
++			writeb(page_addr, addr_reg);
++		}
++	}
++
++	return addr_cycle;
++}
++
++static void vt8500_clear_busy2ready(struct vt8500_priv *vt8500)
++{
++	vt8500_set_bit(vt8500, VT8500_HOST_STAT_CHANGE, VT8500_BUSY_2_READY);
++}
++
++static int vt8500_get_busy2ready(struct vt8500_priv *vt8500)
++{
++	return vt8500_get_bit(vt8500, VT8500_HOST_STAT_CHANGE,
++			      VT8500_BUSY_2_READY);
++}
++
++static int vt8500_wait_cmd_ready(struct vt8500_priv *vt8500)
++{
++	int loop_guard = (1 << 20);
++
++	while (--loop_guard &&
++		vt8500_get_bit(vt8500, VT8500_MISC_STAT_PORT,
++			       VT8500_COMMAND_READY))
++		cpu_relax();
++
++	BUG_ON(!loop_guard);
++
++	return 0;
++}
++
++static int vt8500_wait_transfer_ready(struct vt8500_priv *vt8500)
++{
++	int loop_guard = (1 << 28);
++
++	while (--loop_guard &&
++		vt8500_get_bit(vt8500, VT8500_MISC_STAT_PORT,
++			       VT8500_TRANSFER_IN_PROGRESS))
++		cpu_relax();
++
++	BUG_ON(!loop_guard);
++
++	return 0;
++}
++
++static int vt8500_device_ready(struct mtd_info *mtd)
++{
++	struct vt8500_priv *vt8500 = vt8500_mtd_to_priv(mtd);
++	return vt8500_get_bit(vt8500, VT8500_MISC_STAT_PORT, VT8500_READY_FLAG);
++}
++
++static int vt8500_read_page(struct mtd_info *mtd, struct nand_chip *chip,
++			    uint8_t *buf, int page)
++{
++	struct vt8500_priv *vt8500 = vt8500_mtd_to_priv(mtd);
++
++	chip->read_buf(mtd, buf, mtd->writesize);
++	memcpy_fromio(chip->oob_poi, vt8500->nand.IO_ADDR_R + ECC_FIFO_0,
++		      min(64u, mtd->oobsize));
++
++	return 0;
++}
++
++static void vt8500_trigger_command(struct vt8500_priv *vt8500, int flag,
++				   int command_bytes);
++static void vt8500_setup_dma_transfer(struct vt8500_priv *vt8500,
++				      int direction);
++static int vt8500_wait_dma_end(struct vt8500_priv *vt8500);
++
++static int vt8500_write_oob(struct mtd_info *mtd, struct nand_chip *chip,
++			    int page)
++{
++	int addr_cycle;
++	int status;
++	struct vt8500_priv *vt8500 = vt8500_mtd_to_priv(mtd);
++
++	chip->cmdfunc(mtd, NAND_CMD_READ0, 0, page);
++	vt8500->dataptr = 0;
++	addr_cycle = vt8500_set_addr(vt8500, 0, page);
++	vt8500_setup_dma_transfer(vt8500, VT8500_NAND_WRITE);
++
++	memset_io(vt8500->nand.IO_ADDR_R + ECC_FIFO_0, 0xff, 64);
++	memcpy_toio(vt8500->nand.IO_ADDR_R + ECC_FIFO_0, chip->oob_poi,
++		    min(24u, mtd->oobsize));
++
++	writeb(NAND_CMD_SEQIN, vt8500->nand.IO_ADDR_W);
++	vt8500_trigger_command(vt8500, VT8500_COMMAND_NFC_2_NAND,
++			       addr_cycle + 1);
++
++	vt8500_wait_dma_end(vt8500);
++
++	vt8500_wait_transfer_ready(vt8500);
++
++	chip->cmdfunc(mtd, NAND_CMD_PAGEPROG, -1, -1);
++
++	status = chip->waitfunc(mtd, chip);
++
++	return status & NAND_STATUS_FAIL ? -EIO : 0;
++
++}
++
++static void vt8500_write_page(struct mtd_info *mtd, struct nand_chip *chip,
++			      const uint8_t *buf)
++{
++	int addr_cycle;
++	struct vt8500_priv *vt8500 = vt8500_mtd_to_priv(mtd);
++
++	memset_io(vt8500->nand.IO_ADDR_R + ECC_FIFO_0, 0xff, 64);
++	memcpy_toio(vt8500->nand.IO_ADDR_R + ECC_FIFO_0, chip->oob_poi,
++		    min(24u, mtd->oobsize));
++
++	vt8500->dataptr = 0;
++	chip->write_buf(mtd, buf, mtd->writesize);
++
++	addr_cycle = vt8500_set_addr(vt8500, 0, vt8500->page);
++
++	vt8500_setup_dma_transfer(vt8500, VT8500_NAND_WRITE);
++
++	writeb(NAND_CMD_SEQIN, vt8500->nand.IO_ADDR_W);
++	vt8500_trigger_command(vt8500, VT8500_COMMAND_NFC_2_NAND,
++			       addr_cycle + 1);
++
++	vt8500_wait_dma_end(vt8500);
++
++	vt8500_wait_transfer_ready(vt8500);
++}
++
++static int vt8500_read_page_raw(struct mtd_info *mtd, struct nand_chip *chip,
++				uint8_t *buf, int page)
++{
++	struct vt8500_priv *vt8500 = vt8500_mtd_to_priv(mtd);
++
++	chip->read_buf(mtd, buf, mtd->writesize);
++	memcpy_fromio(chip->oob_poi, vt8500->nand.IO_ADDR_R + ECC_FIFO_0,
++		      min(64u, mtd->oobsize));
++
++	return 0;
++}
++
++static void vt8500_select_chip(struct mtd_info *mtd, int chipnr)
++{
++
++	struct vt8500_priv *vt8500 = vt8500_mtd_to_priv(mtd);
++
++	dev_dbg(vt8500->device, "Selecting chip nr %d", chipnr);
++
++	switch (chipnr) {
++	case -1:
++		writeb(0xff, vt8500->nand.IO_ADDR_R + VT8500_CHIP_ENABLE_CTRL);
++		break;
++	case 0:
++		writeb(0xfe, vt8500->nand.IO_ADDR_R + VT8500_CHIP_ENABLE_CTRL);
++		break;
++	default:
++		dev_err(vt8500->device,
++			"Only one chip nr 0 is supported, got chip nr:%d",
++			chipnr);
++		BUG();
++		break;
++	}
++}
++
++static void vt8500_setup_command(struct vt8500_priv *vt8500, int flag,
++				 int command_bytes)
++{
++	u8 byte = 0;
++	byte |= flag;
++	byte |= command_bytes << 1;
++	writeb(byte, vt8500->nand.IO_ADDR_R + VT8500_COMCTRL);
++}
++
++static void vt8500_trigger_command(struct vt8500_priv *vt8500, int flag,
++				   int command_bytes)
++{
++	flag |= VT8500_TRIGGER_COMMAND;
++	vt8500_setup_command(vt8500, flag, command_bytes);
++}
++
++static void vt8500_read_resume(struct vt8500_priv *vt8500)
++{
++	vt8500_set_bit(vt8500, VT8500_ECC_BCH_CTRL, VT8500_READ_RESUME);
++}
++
++static u8 vt8500_bit_correct(u8 val, int bit)
++{
++	return val ^ (1 << bit);
++}
++
++static void vt8500_correct_error(struct vt8500_priv *vt8500)
++{
++	int i, err_count, err_byte, err_bit, err_reg, oob, bank, err_idx;
++	u8 v;
++
++	err_count = readl(vt8500->nand.IO_ADDR_R + VT8500_ECC_BCH_INT_STAT2) & 0xf;
++	oob =
++	    vt8500_get_bit(vt8500, VT8500_ECC_BCH_INT_STAT2,
++			   VT8500_ECC_ERROR_OOB);
++
++	if (!oob)
++		bank =
++		    (readl(vt8500->nand.IO_ADDR_R + VT8500_ECC_BCH_INT_STAT2) >> 8) &
++		    0x3;
++
++	if (err_count > 4) {
++		dev_info(vt8500->device,
++			 "Too many errors(%d), cannot correct.\n", err_count);
++
++		vt8500->mtd.ecc_stats.failed++;
++		vt8500_read_resume(vt8500);
++		return;
++	}
++
++	for (i = 0; i < err_count; i++) {
++		err_reg =
++		    readl(vt8500->nand.IO_ADDR_R + VT8500_ECC_BCH_ERR_POS1 +
++			  4 * (i / 2));
++		if (i % 2)
++			err_reg >>= 16;
++		err_reg &= 0x1fff;
++		err_byte = err_reg >> 3;
++		err_bit = err_reg & 0x7;
++
++		dev_info(vt8500->device, "Correcting byte: %d, bit: %d\n",
++			 err_byte, err_bit);
++
++		if (!oob) {
++			err_idx = vt8500->nand.ecc.size * bank + err_byte;
++			v = vt8500->dmabuf[err_idx];
++			v = vt8500_bit_correct(v, err_bit);
++			vt8500->dmabuf[err_idx] = v;
++		} else {
++			v = readb(vt8500->nand.IO_ADDR_R + ECC_FIFO_0 + err_byte);
++			v = vt8500_bit_correct(v, err_bit);
++			writeb(v, vt8500->nand.IO_ADDR_R + ECC_FIFO_0 + err_byte);
++		}
++	}
++
++	vt8500_read_resume(vt8500);
++}
++
++static void vt8500_setup_dma_transfer(struct vt8500_priv *vt8500, int direction)
++{
++	unsigned long tmp;
++
++	writew(vt8500->mtd.writesize - 1, vt8500->nand.IO_ADDR_R + VT8500_DMA_COUNTER);
++
++	if (readl(vt8500->nand.IO_ADDR_R + NFC_DMA_ISR) & VT8500_NAND_IER_INT_STS) {
++		int loop_guard = 1 << 20;
++
++		writel(VT8500_NAND_IER_INT_STS, vt8500->nand.IO_ADDR_R + NFC_DMA_ISR);
++
++		while (--loop_guard &&
++			(readl(vt8500->nand.IO_ADDR_R + NFC_DMA_ISR) &
++			VT8500_NAND_IER_INT_STS))
++			cpu_relax();
++
++		if (!loop_guard) {
++			dev_err(vt8500->device,
++				"PDMA interrupt status can't be cleared");
++			dev_err(vt8500->device, "NFC_DMA_ISR = 0x%8.8x\n",
++				(unsigned int)readl(vt8500->nand.IO_ADDR_R +
++						    NFC_DMA_ISR));
++			BUG();
++		}
++	}
++
++	writel(VT8500_NAND_GCR_SOFTRESET, vt8500->nand.IO_ADDR_R + NFC_DMA_GCR);
++	writel(VT8500_NAND_GCR_DMA_EN, vt8500->nand.IO_ADDR_R + NFC_DMA_GCR);
++	/* check if we really succeeded */
++	BUG_ON((readl(vt8500->nand.IO_ADDR_R + NFC_DMA_GCR) & VT8500_NAND_GCR_DMA_EN)
++	       == 0);
++
++	memset(vt8500->dma_desc, 0, sizeof(*vt8500->dma_desc));
++	vt8500->dma_desc->req_count = vt8500->mtd.writesize;
++	vt8500->dma_desc->format = 1;
++	vt8500->dma_desc->i = 1;
++	vt8500->dma_desc->addr = (u32) vt8500->dmaaddr;
++	vt8500->dma_desc->end = 1;
++
++	writel((u32) vt8500->dma_d_addr, vt8500->nand.IO_ADDR_R + NFC_DMA_DESPR);
++
++	/* set direction */
++	tmp = readl(vt8500->nand.IO_ADDR_R + NFC_DMA_CCR);
++	if (direction == VT8500_NAND_READ)
++		tmp |= VT8500_NAND_CCR_PERIPHERAL_TO_IF;
++	else
++		tmp &= ~VT8500_NAND_CCR_IF_TO_PERIPHERAL;
++	writel(tmp, vt8500->nand.IO_ADDR_R + NFC_DMA_CCR);
++
++	writel(1, vt8500->nand.IO_ADDR_R + NFC_DMA_IER);
++
++	tmp = readl(vt8500->nand.IO_ADDR_R + NFC_DMA_CCR);
++	tmp |= VT8500_NAND_CCR_RUN;
++	writel(tmp, vt8500->nand.IO_ADDR_R + NFC_DMA_CCR);
++
++}
++
++static int vt8500_wait_dma_end(struct vt8500_priv *vt8500)
++{
++	if (!wait_for_completion_interruptible_timeout
++	    (&vt8500->dma_complete, msecs_to_jiffies(1000))) {
++		dev_err(vt8500->device, "Waiting for dma interrupt failed!\n");
++		return -1;
++	}
++
++	if (vt8500->dma_status == VT8500_NAND_CCR_EVT_FF_UNDERRUN)
++		dev_err(vt8500->device, "PDMA Buffer under run!\n");
++
++	if (vt8500->dma_status == VT8500_NAND_CCR_EVT_FF_OVERRUN)
++		dev_err(vt8500->device, "PDMA Buffer over run!\n");
++
++	if (vt8500->dma_status == VT8500_NAND_CCR_EVT_DESP_READ)
++		dev_err(vt8500->device, "PDMA read Descriptor error!\n");
++
++	if (vt8500->dma_status == VT8500_NAND_CCR_EVT_DATA_RW)
++		dev_err(vt8500->device,
++			"PDMA read/write memory descriptor error!\n");
++
++	if (vt8500->dma_status == VT8500_NAND_CCR_EVT_EARLY_END)
++		dev_err(vt8500->device, "PDMA read early end!\n");
++
++	return 0;
++}
++
++static int vt8500_wait_nand_completion(struct vt8500_priv *vt8500)
++{
++	if (!wait_for_completion_interruptible_timeout
++	    (&vt8500->nand_complete, msecs_to_jiffies(1000))) {
++		dev_err(vt8500->device, "Waiting for nand interrupt failed!\n");
++		return -1;
++	}
++
++	return 0;
++}
++
++static void vt8500_read_command(struct vt8500_priv *vt8500, int page_addr,
++				int column, int command)
++{
++	int addr_cycle;
++	unsigned short tmp;
++
++	if (command == NAND_CMD_READOOB && column != -1)
++		column +=
++		    (vt8500->nand.ecc.size +
++		     vt8500->nand.ecc.bytes) * vt8500->nand.ecc.steps;
++
++	addr_cycle = vt8500_set_addr(vt8500, column, page_addr);
++
++	if (command == NAND_CMD_READ0)
++		vt8500_setup_dma_transfer(vt8500, VT8500_NAND_READ);
++
++	tmp = readw(vt8500->nand.IO_ADDR_R + VT8500_ECC_BCH_INT_STAT1);
++	tmp |= VT8500_ECC_ERROR | VT8500_ECC_CORRECTION_FINISHED;
++	writew(tmp, vt8500->nand.IO_ADDR_R + VT8500_ECC_BCH_INT_STAT1);
++
++	vt8500->dataptr = 0;
++
++	writeb(NAND_CMD_READ0, vt8500->nand.IO_ADDR_W);
++	writeb(NAND_CMD_READSTART,
++	       vt8500_nand_addr_cycle_to_reg(vt8500, addr_cycle));
++	vt8500_trigger_command(vt8500,
++			       VT8500_COMMAND_NAND_2_NFC |
++			       VT8500_COMMAND_MULT_COMMANDS, addr_cycle + 2);
++
++	if (command == NAND_CMD_READ0)
++		vt8500_wait_dma_end(vt8500);
++
++	vt8500_wait_nand_completion(vt8500);
++}
++
++static void vt8500_nand_cmdfunc(struct mtd_info *mtd, unsigned command,
++				int column, int page_addr)
++{
++
++	struct vt8500_priv *vt8500 = vt8500_mtd_to_priv(mtd);
++	int addr_cycle = 0;
++
++	dev_dbg(vt8500->device, "Command: %u, column: %x, page_addr: %x\n",
++		command, column, page_addr);
++
++	switch (command) {
++	case NAND_CMD_SEQIN:
++		vt8500->page = page_addr;
++		return;
++	case NAND_CMD_READID:
++	case NAND_CMD_ERASE1:
++		addr_cycle = vt8500_set_addr(vt8500, column, page_addr);
++	case NAND_CMD_RESET:
++	case NAND_CMD_ERASE2:
++	case NAND_CMD_PAGEPROG:
++	case NAND_CMD_STATUS:
++		writeb(command, vt8500->nand.IO_ADDR_W);
++
++		vt8500_trigger_command(vt8500, VT8500_COMMAND_NO_DATA |
++				       VT8500_COMMAND_NFC_2_NAND |
++				       VT8500_COMMAND_CYCLES_NONE,
++				       addr_cycle + 1);
++		if (command == NAND_CMD_ERASE1 || command == NAND_CMD_STATUS
++					       || command == NAND_CMD_READID)
++			vt8500_wait_cmd_ready(vt8500);
++		else
++			vt8500_wait_nand_completion(vt8500);
++
++		break;
++	case NAND_CMD_READOOB:
++	case NAND_CMD_READ0:
++		vt8500_read_command(vt8500, page_addr, column, command);
++		break;
++	default:
++		dev_err(vt8500->device,
++			"Command: %u, column: %d, page_addr: %d\n", command,
++			column, page_addr);
++		BUG();
++	}
++}
++
++static int vt8500_read_oob(struct mtd_info *mtd, struct nand_chip *chip,
++			   int page, int sndcmd)
++{
++
++	struct vt8500_priv *vt8500 = vt8500_mtd_to_priv(mtd);
++	uint8_t *buf = chip->oob_poi;
++
++	vt8500_set_bit(vt8500, VT8500_SMC_ENABLE, 0x02);
++
++	if (sndcmd)
++		chip->cmdfunc(mtd, NAND_CMD_READOOB, 0, page);
++
++	memcpy_fromio(buf, vt8500->nand.IO_ADDR_R + ECC_FIFO_0,
++		      min(64u, mtd->oobsize));
++
++	vt8500_clear_bit(vt8500, VT8500_SMC_ENABLE, 0x02);
++	return 0;
++}
++
++static void vt8500_init_chip(struct vt8500_priv *vt8500)
++{
++	unsigned long t;
++	u32 page_per_block_div;
++	u8 type = VT8500_TYPE_SEL_CFG_CHECK_ALLFF
++	    | VT8500_TYPE_SEL_CFG_WP_DISABLE
++	    | VT8500_TYPE_SEL_CFG_DIRECT_MAP
++	    | VT8500_TYPE_SEL_CFG_WIDTH_8 | VT8500_TYPE_SEL_CFG_DIRECT_MAP;
++
++	switch (vt8500->mtd.writesize) {
++	case 512:
++		type |= VT8500_TYPE_SEL_CFG_PAGE_512;
++		break;
++	case 2048:
++		type |= VT8500_TYPE_SEL_CFG_PAGE_2K;
++		break;
++	case 4096:
++		type |= VT8500_TYPE_SEL_CFG_PAGE_4K;
++		break;
++	case 8192:
++		type |= VT8500_TYPE_SEL_CFG_PAGE_8K;
++		break;
++	default:
++		BUG();
++	}
++
++	writeb(type, vt8500->nand.IO_ADDR_R + VT8500_NAND_TYPE_SEL);
++
++	switch (vt8500->mtd.erasesize / vt8500->mtd.writesize) {
++	case 16:
++		page_per_block_div = 0;
++		break;
++	case 32:
++		page_per_block_div = 1;
++		break;
++	case 64:
++		page_per_block_div = 2;
++		break;
++	case 128:
++		page_per_block_div = 3;
++		break;
++	case 256:
++		page_per_block_div = 4;
++		break;
++	case 512:
++		page_per_block_div = 5;
++		break;
++	default:
++		BUG();
++	}
++	page_per_block_div <<= VT8500_PAGE_BLOCK_DIVISOR_SHIFT;
++
++	t = readl(vt8500->nand.IO_ADDR_R + VT8500_PAGESIZE_DIVIDER_SEL);
++	t &= ~VT8500_PAGE_BLOCK_DIVISOR_MASK;
++	t |= page_per_block_div;
++	writel(t, vt8500->nand.IO_ADDR_R + VT8500_PAGESIZE_DIVIDER_SEL);
++
++	/* set ecc type */
++	t = readl(vt8500->nand.IO_ADDR_R + VT8500_ECC_BCH_CTRL);
++	t &= VT8500_ECC_TYPE_MASK;
++
++	if (vt8500->mtd.writesize >= 8192)
++		t |= VT8500_ECC_24BITPER1K;
++	else if (vt8500->mtd.writesize >= 4096 && vt8500->mtd.oobsize >= 218)
++		t |= VT8500_ECC_12BIT;
++	else if (vt8500->mtd.writesize > 512)
++		t |= VT8500_ECC_4BIT;
++	else
++		t |= VT8500_ECC_1BIT;
++
++	writel(t, vt8500->nand.IO_ADDR_R + VT8500_ECC_BCH_CTRL);
++
++	/* enable hardware ecc */
++	vt8500_clear_bit(vt8500, VT8500_MISC_CTRL, VT8500_SOFTWARE_ECC);
++
++	/* enable ecc interrupt */
++	writew(VT8500_INTERRUPTS_ENABLE,
++	       vt8500->nand.IO_ADDR_R + VT8500_ECC_BCH_INT_MASK);
++}
++
++static void vt8500_write_buf(struct mtd_info *mtd, const uint8_t * buf, int len)
++{
++	struct vt8500_priv *vt8500 = vt8500_mtd_to_priv(mtd);
++
++	len = min(len, (VT8500_DMA_BUFFER_SIZE - vt8500->dataptr));
++
++	memcpy(vt8500->dmabuf + vt8500->dataptr, buf, len);
++	vt8500->dataptr += len;
++}
++
++static void vt8500_read_buf(struct mtd_info *mtd, uint8_t * buf, int len)
++{
++	struct vt8500_priv *vt8500 = vt8500_mtd_to_priv(mtd);
++
++	len = min(len, (VT8500_DMA_BUFFER_SIZE - vt8500->dataptr));
++
++	memcpy(buf, vt8500->dmabuf + vt8500->dataptr, len);
++	vt8500->dataptr += len;
++}
++
++static uint8_t vt8500_read_byte(struct mtd_info *mtd)
++{
++	struct vt8500_priv *vt8500 = vt8500_mtd_to_priv(mtd);
++
++	vt8500_trigger_command(vt8500, VT8500_COMMAND_HAS_DATA |
++				VT8500_COMMAND_NAND_2_NFC |
++				VT8500_COMMAND_CYCLES_SINGLE, 0);
++
++	if (vt8500_wait_cmd_ready(vt8500))
++		dev_warn(vt8500->device, "Timed out waiting for command completion before reading byte\n");
++
++	vt8500_wait_transfer_ready(vt8500);
++
++	return readb(vt8500->nand.IO_ADDR_R);
++}
++
++static void vt8500_clock_on(int on, struct vt8500_priv *vt8500)
++{
++	unsigned long t;
++	void __iomem *pmc_mem = ioremap(0xd8130000, 0x400);
++	BUG_ON(pmc_mem == NULL);
++
++	dev_dbg(vt8500->device, "Settting clock: %d\n", on);
++	t = readl(pmc_mem + PMCEU_ADDR);
++	if (on)
++		writel(t | 0x0010000, pmc_mem + PMCEU_ADDR);
++	else
++		writel(t & ~0x0010000, pmc_mem + PMCEU_ADDR);
++
++	iounmap(pmc_mem);
++
++}
++
++static void vt8500_start_up(struct vt8500_priv *vt8500)
++{
++	vt8500_clock_on(1, vt8500);
++
++	vt8500_read_resume(vt8500);
++
++	writel(VT8500_INT1_MASK, vt8500->nand.IO_ADDR_R + VT8500_INT1_REG);
++}
++
++static irqreturn_t vt8500_nand_irq(int irq_num, void *_vt8500)
++{
++	struct vt8500_priv *vt8500 = _vt8500;
++
++	int loop_guard = 1 << 20;
++
++	if (vt8500_get_bit(vt8500, VT8500_ECC_BCH_INT_STAT1,
++	    VT8500_ECC_ERROR)) {
++		vt8500_correct_error(vt8500);
++		return IRQ_HANDLED;
++	}
++
++	while (--loop_guard && !vt8500_get_busy2ready(vt8500))
++		cpu_relax();
++
++	BUG_ON(!loop_guard);
++
++	vt8500_clear_busy2ready(vt8500);
++	complete(&vt8500->nand_complete);
++
++	return IRQ_HANDLED;
++}
++
++static irqreturn_t vt8500_dma_irq(int irq_num, void *_priv)
++{
++	struct vt8500_priv *vt8500 = _priv;
++
++	if (readl(vt8500->nand.IO_ADDR_R + NFC_DMA_ISR) & VT8500_NAND_IER_INT_STS) {
++		vt8500->dma_status =
++		    readl(vt8500->nand.IO_ADDR_R +
++			  NFC_DMA_CCR) & VT8500_NAND_CCR_EVTCODE;
++		writel(VT8500_NAND_IER_INT_STS, vt8500->nand.IO_ADDR_R + NFC_DMA_ISR);
++	}
++	complete(&vt8500->dma_complete);
++	return IRQ_HANDLED;
++}
++
++static int vt8500_probe(struct platform_device *dev)
++{
++	struct vt8500_priv *vt8500;
++	struct resource *res;
++	int err;
++	int num_partitions = 0;
++	struct mtd_partition *partitions = NULL;
++	void __iomem *iobase;
++
++	vt8500 = kzalloc(sizeof(struct vt8500_priv), GFP_KERNEL);
++	if (vt8500 == NULL)
++		return -ENOMEM;
++
++	vt8500->device = &dev->dev;
++	dev_set_drvdata(&dev->dev, vt8500);
++
++	res  = platform_get_resource(dev, IORESOURCE_MEM, 0);
++	if (!request_mem_region(res->start, resource_size(res), dev->name)) {
++		dev_err(vt8500->device,
++			"Failed to request NFC NAND memory region");
++		err = -ENOENT;
++		goto error_1;
++	}
++	vt8500->nfc_mem_region = res;
++
++	iobase = ioremap(res->start, resource_size(res));
++	if (!iobase) {
++		dev_err(vt8500->device, "ioremap failed on nfc regs");
++		err = -ENOMEM;
++		goto error_2;
++	}
++
++	vt8500->dmabuf =
++	    dma_alloc_coherent(&dev->dev, VT8500_DMA_BUFFER_SIZE,
++			       &vt8500->dmaaddr, GFP_KERNEL);
++	if (!vt8500->dmabuf) {
++		dev_err(vt8500->device, "Failed to allocate dma memory");
++		err = -ENOMEM;
++		goto error_3;
++	}
++
++	vt8500->dma_desc =
++	    dma_alloc_coherent(&dev->dev, sizeof(*vt8500->dma_desc),
++			       &vt8500->dma_d_addr, GFP_KERNEL);
++	if (!vt8500->dma_desc) {
++		dev_err(vt8500->device,
++			"Failed to allocate dma memory for dma descriptor");
++		err = -ENOMEM;
++		goto error_4;
++	}
++
++	vt8500->nand_irq = platform_get_irq(dev, 0);
++	if (vt8500->nand_irq == NO_IRQ) {
++		dev_err(vt8500->device, "Failed to retrive nand irq");
++		err = -EINVAL;
++		goto error_5;
++	}
++
++	vt8500->dma_irq = platform_get_irq(dev, 1);
++	if (vt8500->dma_irq == NO_IRQ) {
++		dev_err(vt8500->device, "Failed to retrive nand dma irq");
++		err = -EINVAL;
++		goto error_5;
++	}
++
++	if (request_irq(vt8500->nand_irq, vt8500_nand_irq, 0, "nand", vt8500)) {
++		dev_err(vt8500->device, "Failed to register nand irq handler");
++		err = -EINVAL;
++		goto error_5;
++	}
++
++	if (request_irq(vt8500->dma_irq, vt8500_dma_irq, 0, "nand", vt8500)) {
++		dev_err(vt8500->device, "Failed to register dma irq handler");
++		err = -EINVAL;
++		goto error_6;
++	}
++
++	vt8500->mtd.priv = &vt8500->nand;
++	vt8500->mtd.owner = THIS_MODULE;
++	vt8500->mtd.name = "vt8500_nand";
++
++	vt8500->nand.ecc.layout = &vt8500_oobinfo;
++	vt8500->nand.bbt_td = &vt8500_bbt_descr;
++	vt8500->nand.bbt_md = &vt8500_bbt_mirror_descr;
++	vt8500->nand.ecc.mode = NAND_ECC_HW;
++	vt8500->nand.ecc.size = 512;
++	vt8500->nand.ecc.bytes = 8;
++	vt8500->nand.ecc.steps = 8;
++
++	vt8500->nand.IO_ADDR_R = iobase;
++	vt8500->nand.IO_ADDR_W = iobase + VT8500_COMPORT0;
++	vt8500->nand.cmdfunc = vt8500_nand_cmdfunc;
++	vt8500->nand.dev_ready = vt8500_device_ready;
++	vt8500->nand.read_byte = vt8500_read_byte;
++	vt8500->nand.read_buf = vt8500_read_buf;
++	vt8500->nand.write_buf = vt8500_write_buf;
++	vt8500->nand.select_chip = vt8500_select_chip;
++	vt8500->nand.ecc.read_page = vt8500_read_page;
++	vt8500->nand.ecc.read_page_raw = vt8500_read_page_raw;
++	vt8500->nand.ecc.read_oob = vt8500_read_oob;
++	vt8500->nand.ecc.write_page_raw = vt8500_write_page;
++	vt8500->nand.ecc.write_page = vt8500_write_page;
++	vt8500->nand.ecc.write_oob = vt8500_write_oob;
++	vt8500->nand.chip_delay = 20;
++
++	init_completion(&vt8500->nand_complete);
++	init_completion(&vt8500->dma_complete);
++
++	vt8500_start_up(vt8500);
++
++	vt8500_set_clock(vt8500);
++
++	if (nand_scan(&vt8500->mtd, 1)) {
++		dev_err(vt8500->device, "NAND scan failed");
++		err = -ENXIO;
++		goto error_7;
++	}
++
++	vt8500_init_chip(vt8500);
++
++	err = mtd_device_register(&vt8500->mtd, partitions, num_partitions);
++	if (!err)
++		return 0;
++
++	nand_release(&vt8500->mtd);
++
++error_7:
++	free_irq(vt8500->dma_irq, vt8500);
++error_6:
++	free_irq(vt8500->nand_irq, vt8500);
++error_5:
++	dma_free_coherent(&dev->dev, sizeof(*vt8500->dma_desc),
++			  vt8500->dma_desc, vt8500->dma_d_addr);
++error_4:
++	dma_free_coherent(&dev->dev, VT8500_DMA_BUFFER_SIZE, vt8500->dmabuf,
++			  vt8500->dmaaddr);
++error_3:
++	iounmap(iobase);
++error_2:
++	release_mem_region(res->start, resource_size(res));
++error_1:
++	kfree(vt8500);
++	return err;
++}
++
++static int vt8500_remove(struct platform_device *dev)
++{
++
++	struct vt8500_priv *vt8500 = dev_get_drvdata(&dev->dev);
++	dev_set_drvdata(&dev->dev, NULL);
++
++	nand_release(&vt8500->mtd);
++
++	vt8500_clock_on(0, vt8500);
++
++	iounmap(vt8500->nand.IO_ADDR_R);
++	release_mem_region(vt8500->nfc_mem_region->start,
++			   vt8500->nfc_mem_region->end -
++			   vt8500->nfc_mem_region->start + 1);
++
++	dma_free_coherent(&dev->dev, VT8500_DMA_BUFFER_SIZE, vt8500->dmabuf,
++			  vt8500->dmaaddr);
++	dma_free_coherent(&dev->dev, sizeof(*vt8500->dma_desc),
++			  vt8500->dma_desc, vt8500->dma_d_addr);
++
++	free_irq(vt8500->dma_irq, vt8500);
++	free_irq(vt8500->nand_irq, vt8500);
++
++	kfree(vt8500);
++
++	return 0;
++}
++
++struct platform_driver vt8500_driver = {
++	.probe = vt8500_probe,
++	.remove = __devexit_p(vt8500_remove),
++	.driver = {
++		   .name = "vt8500-nand"}
++};
++
++static int __init vt8500_init(void)
++{
++	return platform_driver_register(&vt8500_driver);
++}
++
++static void __devexit vt8500_exit(void)
++{
++	platform_driver_unregister(&vt8500_driver);
++}
++
++module_init(vt8500_init);
++module_exit(vt8500_exit);
++
++MODULE_DESCRIPTION("WonderMedia VT8500/WM8505 NAND Flash Driver");
++MODULE_LICENSE("GPL");
+diff -Naur linux-3.4.orig/drivers/net/ethernet/via/Kconfig linux-3.4/drivers/net/ethernet/via/Kconfig
+--- linux-3.4.orig/drivers/net/ethernet/via/Kconfig	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/drivers/net/ethernet/via/Kconfig	2019-03-07 02:50:20.000000000 -0700
+@@ -5,7 +5,7 @@
+ config NET_VENDOR_VIA
+ 	bool "VIA devices"
+ 	default y
+-	depends on PCI
++	depends on PCI || ARCH_VT8500
+ 	---help---
+ 	  If you have a network (Ethernet) card belonging to this class, say Y
+ 	  and read the Ethernet-HOWTO, available from
+@@ -20,7 +20,7 @@
+ 
+ config VIA_RHINE
+ 	tristate "VIA Rhine support"
+-	depends on PCI
++	depends on PCI || ARCH_VT8500
+ 	select CRC32
+ 	select NET_CORE
+ 	select MII
+@@ -45,7 +45,7 @@
+ 
+ config VIA_VELOCITY
+ 	tristate "VIA Velocity support"
+-	depends on PCI
++	depends on PCI || ARCH_VT8500
+ 	select CRC32
+ 	select CRC_CCITT
+ 	select NET_CORE
+diff -Naur linux-3.4.orig/drivers/net/ethernet/via/via-rhine.c linux-3.4/drivers/net/ethernet/via/via-rhine.c
+--- linux-3.4.orig/drivers/net/ethernet/via/via-rhine.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/drivers/net/ethernet/via/via-rhine.c	2019-03-07 02:50:20.000000000 -0700
+@@ -94,6 +94,7 @@
+ #include <linux/ioport.h>
+ #include <linux/interrupt.h>
+ #include <linux/pci.h>
++#include <linux/platform_device.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
+@@ -441,6 +442,7 @@
+ 	dma_addr_t tx_bufs_dma;
+ 
+ 	struct pci_dev *pdev;
++	u8 is_management_adapter;
+ 	long pioaddr;
+ 	struct net_device *dev;
+ 	struct napi_struct napi;
+@@ -865,11 +867,6 @@
+ 	void __iomem *ioaddr;
+ 	int io_size, phy_id;
+ 	const char *name;
+-#ifdef USE_MMIO
+-	int bar = 1;
+-#else
+-	int bar = 0;
+-#endif
+ 
+ /* when built into the kernel, we only print version if device is found */
+ #ifndef MODULE
+@@ -938,13 +935,14 @@
+ 	rp->quirks = quirks;
+ 	rp->pioaddr = pioaddr;
+ 	rp->pdev = pdev;
++	rp->is_management_adapter = pdev->revision >= VT6105M ? 1 : 0;
+ 	rp->msg_enable = netif_msg_init(debug, RHINE_MSG_DEFAULT);
+ 
+ 	rc = pci_request_regions(pdev, DRV_NAME);
+ 	if (rc)
+ 		goto err_out_free_netdev;
+ 
+-	ioaddr = pci_iomap(pdev, bar, io_size);
++	ioaddr = ioremap_nocache(memaddr, io_size);
+ 	if (!ioaddr) {
+ 		rc = -EIO;
+ 		dev_err(&pdev->dev,
+@@ -1018,7 +1016,7 @@
+ 	if (rp->quirks & rqRhineI)
+ 		dev->features |= NETIF_F_SG|NETIF_F_HW_CSUM;
+ 
+-	if (pdev->revision >= VT6105M)
++	if (rp->is_management_adapter)
+ 		dev->features |= NETIF_F_HW_VLAN_TX | NETIF_F_HW_VLAN_RX |
+ 		NETIF_F_HW_VLAN_FILTER;
+ 
+@@ -1066,7 +1064,7 @@
+ 	return 0;
+ 
+ err_out_unmap:
+-	pci_iounmap(pdev, ioaddr);
++	iounmap(ioaddr);
+ err_out_free_res:
+ 	pci_release_regions(pdev);
+ err_out_free_netdev:
+@@ -1075,26 +1073,164 @@
+ 	return rc;
+ }
+ 
++static int __devinit rhine_init_one_platform(struct platform_device *pdev)
++{
++	struct net_device *dev;
++	struct rhine_private *rp;
++	struct resource *res;
++	void __iomem *ioaddr;
++	int ret = 0;
++	int phy_id = 1;
++	int i;
++
++	dev = alloc_etherdev(sizeof(struct rhine_private));
++	if (!dev) {
++		ret = -ENOMEM;
++		dev_err(&pdev->dev, "alloc_etherdev failed\n");
++		goto err_out;
++	}
++	SET_NETDEV_DEV(dev, &pdev->dev);
++
++	rp = netdev_priv(dev);
++	rp->dev = dev;
++	rp->quirks = rqWOL | rqForceReset;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!request_mem_region(res->start, resource_size(res), pdev->name)) {
++		ret = -ENOMEM;
++		dev_err(&pdev->dev, "failed to request memory\n");
++		goto err_out_free_netdev;
++	}
++
++	ioaddr = ioremap_nocache(res->start, resource_size(res));
++	if (!ioaddr) {
++		ret = -EIO;
++		dev_err(&pdev->dev,
++			"ioremap failed for platform device");
++		goto err_out_free_res;
++	}
++
++	dev->base_addr = (unsigned long)ioaddr;
++	rp->base = ioaddr;
++
++	/* Get chip registers into a sane state */
++	rhine_power_init(dev);
++	rhine_hw_init(dev, (long)ioaddr);
++
++	for (i = 0; i < 6; i++)
++		dev->dev_addr[i] = ioread8(ioaddr + StationAddr + i);
++
++	if (!is_valid_ether_addr(dev->dev_addr)) {
++		/* Report it and use a random ethernet address instead */
++		netdev_err(dev, "Invalid MAC address: %pM\n", dev->dev_addr);
++		random_ether_addr(dev->dev_addr);
++		netdev_info(dev, "Using random MAC address: %pM\n",
++			    dev->dev_addr);
++	}
++	memcpy(dev->perm_addr, dev->dev_addr, dev->addr_len);
++
++	/* For Rhine-I/II, phy_id is loaded from EEPROM */
++	if (!phy_id)
++		phy_id = ioread8(ioaddr + 0x6C);
++
++	dev->irq = platform_get_irq(pdev, 0);
++	if (!dev->irq) {
++		ret = -EINVAL;
++		dev_err(&pdev->dev, "failed to get platform irq\n");
++		goto err_out_unmap;
++	}
++
++	spin_lock_init(&rp->lock);
++	INIT_WORK(&rp->reset_task, rhine_reset_task);
++
++	rp->mii_if.dev = dev;
++	rp->mii_if.mdio_read = mdio_read;
++	rp->mii_if.mdio_write = mdio_write;
++	rp->mii_if.phy_id_mask = 0x1f;
++	rp->mii_if.reg_num_mask = 0x1f;
++
++	/* The chip-specific entries in the device structure. */
++	dev->netdev_ops = &rhine_netdev_ops;
++	dev->ethtool_ops = &netdev_ethtool_ops,
++	dev->watchdog_timeo = TX_TIMEOUT;
++
++	netif_napi_add(dev, &rp->napi, rhine_napipoll, 64);
++
++	if (rp->quirks & rqRhineI)
++		dev->features |= NETIF_F_SG|NETIF_F_HW_CSUM;
++
++	if (rp->is_management_adapter)
++		dev->features |= NETIF_F_HW_VLAN_TX | NETIF_F_HW_VLAN_RX |
++		NETIF_F_HW_VLAN_FILTER;
++
++	/* dev->name not defined before register_netdev()! */
++	ret = register_netdev(dev);
++	if (ret)
++		goto err_out_unmap;
++
++	netdev_info(dev, "VIA Rhine platform device at 0x%lx, %pM, IRQ %d\n",
++		    (unsigned long)res->start,
++		    dev->dev_addr, dev->irq);
++
++	{
++		u16 mii_cmd;
++		int mii_status = mdio_read(dev, phy_id, 1);
++		mii_cmd = mdio_read(dev, phy_id, MII_BMCR) & ~BMCR_ISOLATE;
++		mdio_write(dev, phy_id, MII_BMCR, mii_cmd);
++		if (mii_status != 0xffff && mii_status != 0x0000) {
++			rp->mii_if.advertising = mdio_read(dev, phy_id, 4);
++			netdev_info(dev,
++				    "MII PHY found at address %d, status 0x%04x advertising %04x Link %04x\n",
++				    phy_id,
++				    mii_status, rp->mii_if.advertising,
++				    mdio_read(dev, phy_id, 5));
++
++			/* set IFF_RUNNING */
++			if (mii_status & BMSR_LSTATUS)
++				netif_carrier_on(dev);
++			else
++				netif_carrier_off(dev);
++
++		}
++	}
++	rp->mii_if.phy_id = phy_id;
++	if (debug > 1 && avoid_D3)
++		netdev_info(dev, "No D3 power state at shutdown\n");
++
++	return 0;
++
++err_out_unmap:
++	iounmap(ioaddr);
++err_out_free_res:
++	release_mem_region(res->start, resource_size(res));
++err_out_free_netdev:
++	free_netdev(dev);
++err_out:
++	return ret;
++}
++
+ static int alloc_ring(struct net_device* dev)
+ {
+ 	struct rhine_private *rp = netdev_priv(dev);
+ 	void *ring;
+ 	dma_addr_t ring_dma;
+ 
+-	ring = pci_alloc_consistent(rp->pdev,
++	ring = dma_alloc_coherent(dev->dev.parent,
+ 				    RX_RING_SIZE * sizeof(struct rx_desc) +
+ 				    TX_RING_SIZE * sizeof(struct tx_desc),
+-				    &ring_dma);
++				    &ring_dma, GFP_ATOMIC);
+ 	if (!ring) {
+ 		netdev_err(dev, "Could not allocate DMA memory\n");
+ 		return -ENOMEM;
+ 	}
+ 	if (rp->quirks & rqRhineI) {
+-		rp->tx_bufs = pci_alloc_consistent(rp->pdev,
++		rp->tx_bufs = dma_alloc_coherent(dev->dev.parent,
+ 						   PKT_BUF_SZ * TX_RING_SIZE,
+-						   &rp->tx_bufs_dma);
++						   &rp->tx_bufs_dma,
++						   GFP_ATOMIC
++						);
+ 		if (rp->tx_bufs == NULL) {
+-			pci_free_consistent(rp->pdev,
++			dma_free_coherent(dev->dev.parent,
+ 				    RX_RING_SIZE * sizeof(struct rx_desc) +
+ 				    TX_RING_SIZE * sizeof(struct tx_desc),
+ 				    ring, ring_dma);
+@@ -1114,14 +1250,14 @@
+ {
+ 	struct rhine_private *rp = netdev_priv(dev);
+ 
+-	pci_free_consistent(rp->pdev,
++	dma_free_coherent(dev->dev.parent,
+ 			    RX_RING_SIZE * sizeof(struct rx_desc) +
+ 			    TX_RING_SIZE * sizeof(struct tx_desc),
+ 			    rp->rx_ring, rp->rx_ring_dma);
+ 	rp->tx_ring = NULL;
+ 
+ 	if (rp->tx_bufs)
+-		pci_free_consistent(rp->pdev, PKT_BUF_SZ * TX_RING_SIZE,
++		dma_free_coherent(dev->dev.parent, PKT_BUF_SZ * TX_RING_SIZE,
+ 				    rp->tx_bufs, rp->tx_bufs_dma);
+ 
+ 	rp->tx_bufs = NULL;
+@@ -1159,8 +1295,8 @@
+ 			break;
+ 
+ 		rp->rx_skbuff_dma[i] =
+-			pci_map_single(rp->pdev, skb->data, rp->rx_buf_sz,
+-				       PCI_DMA_FROMDEVICE);
++			dma_map_single(dev->dev.parent, skb->data, rp->rx_buf_sz,
++				       DMA_FROM_DEVICE);
+ 
+ 		rp->rx_ring[i].addr = cpu_to_le32(rp->rx_skbuff_dma[i]);
+ 		rp->rx_ring[i].rx_status = cpu_to_le32(DescOwn);
+@@ -1178,9 +1314,9 @@
+ 		rp->rx_ring[i].rx_status = 0;
+ 		rp->rx_ring[i].addr = cpu_to_le32(0xBADF00D0); /* An invalid address. */
+ 		if (rp->rx_skbuff[i]) {
+-			pci_unmap_single(rp->pdev,
++			dma_unmap_single(dev->dev.parent,
+ 					 rp->rx_skbuff_dma[i],
+-					 rp->rx_buf_sz, PCI_DMA_FROMDEVICE);
++					 rp->rx_buf_sz, DMA_FROM_DEVICE);
+ 			dev_kfree_skb(rp->rx_skbuff[i]);
+ 		}
+ 		rp->rx_skbuff[i] = NULL;
+@@ -1219,10 +1355,10 @@
+ 		rp->tx_ring[i].addr = cpu_to_le32(0xBADF00D0); /* An invalid address. */
+ 		if (rp->tx_skbuff[i]) {
+ 			if (rp->tx_skbuff_dma[i]) {
+-				pci_unmap_single(rp->pdev,
++				dma_unmap_single(dev->dev.parent,
+ 						 rp->tx_skbuff_dma[i],
+ 						 rp->tx_skbuff[i]->len,
+-						 PCI_DMA_TODEVICE);
++						 DMA_TO_DEVICE);
+ 			}
+ 			dev_kfree_skb(rp->tx_skbuff[i]);
+ 		}
+@@ -1450,7 +1586,7 @@
+ 
+ 	rhine_set_rx_mode(dev);
+ 
+-	if (rp->pdev->revision >= VT6105M)
++	if (rp->is_management_adapter)
+ 		rhine_init_cam_filter(dev);
+ 
+ 	napi_enable(&rp->napi);
+@@ -1562,16 +1698,16 @@
+ 	void __iomem *ioaddr = rp->base;
+ 	int rc;
+ 
+-	rc = request_irq(rp->pdev->irq, rhine_interrupt, IRQF_SHARED, dev->name,
++	rc = request_irq(dev->irq, rhine_interrupt, IRQF_SHARED, dev->name,
+ 			dev);
+ 	if (rc)
+ 		return rc;
+ 
+-	netif_dbg(rp, ifup, dev, "%s() irq %d\n", __func__, rp->pdev->irq);
++	netif_dbg(rp, ifup, dev, "%s() irq %d\n", __func__, dev->irq);
+ 
+ 	rc = alloc_ring(dev);
+ 	if (rc) {
+-		free_irq(rp->pdev->irq, dev);
++		free_irq(dev->irq, dev);
+ 		return rc;
+ 	}
+ 	alloc_rbufs(dev);
+@@ -1675,8 +1811,8 @@
+ 						       rp->tx_bufs));
+ 	} else {
+ 		rp->tx_skbuff_dma[entry] =
+-			pci_map_single(rp->pdev, skb->data, skb->len,
+-				       PCI_DMA_TODEVICE);
++			dma_map_single(dev->dev.parent, skb->data, skb->len,
++				       DMA_TO_DEVICE);
+ 		rp->tx_ring[entry].addr = cpu_to_le32(rp->tx_skbuff_dma[entry]);
+ 	}
+ 
+@@ -1797,10 +1933,10 @@
+ 		}
+ 		/* Free the original skb. */
+ 		if (rp->tx_skbuff_dma[entry]) {
+-			pci_unmap_single(rp->pdev,
++			dma_unmap_single(dev->dev.parent,
+ 					 rp->tx_skbuff_dma[entry],
+ 					 rp->tx_skbuff[entry]->len,
+-					 PCI_DMA_TODEVICE);
++					 DMA_TO_DEVICE);
+ 		}
+ 		dev_kfree_skb_irq(rp->tx_skbuff[entry]);
+ 		rp->tx_skbuff[entry] = NULL;
+@@ -1890,19 +2026,19 @@
+ 			if (pkt_len < rx_copybreak)
+ 				skb = netdev_alloc_skb_ip_align(dev, pkt_len);
+ 			if (skb) {
+-				pci_dma_sync_single_for_cpu(rp->pdev,
++				dma_sync_single_for_cpu(dev->dev.parent,
+ 							    rp->rx_skbuff_dma[entry],
+ 							    rp->rx_buf_sz,
+-							    PCI_DMA_FROMDEVICE);
++							    DMA_FROM_DEVICE);
+ 
+ 				skb_copy_to_linear_data(skb,
+ 						 rp->rx_skbuff[entry]->data,
+ 						 pkt_len);
+ 				skb_put(skb, pkt_len);
+-				pci_dma_sync_single_for_device(rp->pdev,
++				dma_sync_single_for_device(dev->dev.parent,
+ 							       rp->rx_skbuff_dma[entry],
+ 							       rp->rx_buf_sz,
+-							       PCI_DMA_FROMDEVICE);
++							       DMA_FROM_DEVICE);
+ 			} else {
+ 				skb = rp->rx_skbuff[entry];
+ 				if (skb == NULL) {
+@@ -1911,10 +2047,10 @@
+ 				}
+ 				rp->rx_skbuff[entry] = NULL;
+ 				skb_put(skb, pkt_len);
+-				pci_unmap_single(rp->pdev,
++				dma_unmap_single(dev->dev.parent,
+ 						 rp->rx_skbuff_dma[entry],
+ 						 rp->rx_buf_sz,
+-						 PCI_DMA_FROMDEVICE);
++						 DMA_FROM_DEVICE);
+ 			}
+ 
+ 			if (unlikely(desc_length & DescTag))
+@@ -1942,9 +2078,9 @@
+ 			if (skb == NULL)
+ 				break;	/* Better luck next round. */
+ 			rp->rx_skbuff_dma[entry] =
+-				pci_map_single(rp->pdev, skb->data,
++				dma_map_single(dev->dev.parent, skb->data,
+ 					       rp->rx_buf_sz,
+-					       PCI_DMA_FROMDEVICE);
++					       DMA_FROM_DEVICE);
+ 			rp->rx_ring[entry].addr = cpu_to_le32(rp->rx_skbuff_dma[entry]);
+ 		}
+ 		rp->rx_ring[entry].rx_status = cpu_to_le32(DescOwn);
+@@ -2049,7 +2185,7 @@
+ 		/* Too many to match, or accept all multicasts. */
+ 		iowrite32(0xffffffff, ioaddr + MulticastFilter0);
+ 		iowrite32(0xffffffff, ioaddr + MulticastFilter1);
+-	} else if (rp->pdev->revision >= VT6105M) {
++	} else if (rp->is_management_adapter) {
+ 		int i = 0;
+ 		u32 mCAMmask = 0;	/* 32 mCAMs (6105M and better) */
+ 		netdev_for_each_mc_addr(ha, dev) {
+@@ -2071,7 +2207,7 @@
+ 		iowrite32(mc_filter[1], ioaddr + MulticastFilter1);
+ 	}
+ 	/* enable/disable VLAN receive filtering */
+-	if (rp->pdev->revision >= VT6105M) {
++	if (rp->is_management_adapter) {
+ 		if (dev->flags & IFF_PROMISC)
+ 			BYTE_REG_BITS_OFF(BCR1_VIDFR, ioaddr + PCIBusConfig1);
+ 		else
+@@ -2223,7 +2359,7 @@
+ 	/* Stop the chip's Tx and Rx processes. */
+ 	iowrite16(CmdStop, ioaddr + ChipCmd);
+ 
+-	free_irq(rp->pdev->irq, dev);
++	free_irq(dev->irq, dev);
+ 	free_rbufs(dev);
+ 	free_tbufs(dev);
+ 	free_ring(dev);
+@@ -2239,7 +2375,7 @@
+ 
+ 	unregister_netdev(dev);
+ 
+-	pci_iounmap(pdev, rp->base);
++	iounmap(rp->base);
+ 	pci_release_regions(pdev);
+ 
+ 	free_netdev(dev);
+@@ -2247,6 +2383,22 @@
+ 	pci_set_drvdata(pdev, NULL);
+ }
+ 
++static int __devexit rhine_remove_one_platform(struct platform_device *pdev)
++{
++	struct net_device *dev = platform_get_drvdata(pdev);
++	struct rhine_private *rp = netdev_priv(dev);
++	struct resource *res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++
++	unregister_netdev(dev);
++	iounmap(rp->base);
++	release_mem_region(res->start, resource_size(res));
++
++	free_netdev(dev);
++	platform_set_drvdata(pdev, NULL);
++
++	return 0;
++}
++
+ static void rhine_shutdown (struct pci_dev *pdev)
+ {
+ 	struct net_device *dev = pci_get_drvdata(pdev);
+@@ -2364,6 +2516,14 @@
+ 	.driver.pm	= RHINE_PM_OPS,
+ };
+ 
++static struct platform_driver rhine_platform_driver = {
++	.probe		= rhine_init_one_platform,
++	.remove		= __devexit_p(rhine_remove_one_platform),
++	.driver		= {
++		.name	= DRV_NAME,
++	}
++};
++
+ static struct dmi_system_id __initdata rhine_dmi_table[] = {
+ 	{
+ 		.ident = "EPIA-M",
+@@ -2384,6 +2544,8 @@
+ 
+ static int __init rhine_init(void)
+ {
++	int ret = 0;
++
+ /* when a module, this is printed whether or not devices are found in probe */
+ #ifdef MODULE
+ 	pr_info("%s\n", version);
+@@ -2396,13 +2558,18 @@
+ 	else if (avoid_D3)
+ 		pr_info("avoid_D3 set\n");
+ 
+-	return pci_register_driver(&rhine_driver);
++	ret = platform_driver_register(&rhine_platform_driver);
++	if (!ret)
++		ret = pci_register_driver(&rhine_driver);
++
++	return ret;
+ }
+ 
+ 
+ static void __exit rhine_cleanup(void)
+ {
+ 	pci_unregister_driver(&rhine_driver);
++	platform_driver_unregister(&rhine_platform_driver);
+ }
+ 
+ 
+diff -Naur linux-3.4.orig/drivers/net/ethernet/via/via-velocity.c linux-3.4/drivers/net/ethernet/via/via-velocity.c
+--- linux-3.4.orig/drivers/net/ethernet/via/via-velocity.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/drivers/net/ethernet/via/via-velocity.c	2019-03-07 03:07:26.000000000 -0700
+@@ -76,6 +76,9 @@
+ #include <linux/udp.h>
+ #include <linux/crc-ccitt.h>
+ #include <linux/crc32.h>
++#include <linux/platform_device.h>
++#include <linux/dma-mapping.h>
++#include <linux/dmapool.h>
+ 
+ #include "via-velocity.h"
+ 
+@@ -83,6 +86,15 @@
+ static int velocity_nics;
+ static int msglevel = MSG_LEVEL_INFO;
+ 
++void velocity_set_power_state(struct velocity_info *vptr, char state)
++{
++	struct mac_regs __iomem *regs = vptr->mac_regs;
++	if (vptr->bustype == BUS_PCI)
++		pci_set_power_state(vptr->pdev.pcidev, state);
++	else
++		writeb(state, (&regs->PAR[0]) + 0x154);
++}
++
+ /**
+  *	mac_get_cam_mask	-	Read a CAM mask
+  *	@regs: register block for this velocity
+@@ -385,27 +397,42 @@
+ }
+ 
+ /**
+- *	velocity_remove1	-	device unplug
+- *	@pdev: PCI device being removed
++ *	velocity_remove_(pci|platform)	-	device unplug
++ *	@pdev: device being removed
+  *
+  *	Device unload callback. Called on an unplug or on module
+  *	unload for each active device that is present. Disconnects
+  *	the device from the network layer and frees all the resources
+  */
+-static void __devexit velocity_remove1(struct pci_dev *pdev)
++static void __devexit velocity_remove1(struct net_device *dev)
+ {
+-	struct net_device *dev = pci_get_drvdata(pdev);
+ 	struct velocity_info *vptr = netdev_priv(dev);
+ 
+ 	unregister_netdev(dev);
+ 	iounmap(vptr->mac_regs);
+-	pci_release_regions(pdev);
+-	pci_disable_device(pdev);
+-	pci_set_drvdata(pdev, NULL);
+ 	free_netdev(dev);
+ 
+ 	velocity_nics--;
+ }
++#ifdef CONFIG_PCI
++static void __devexit velocity_remove_pci(struct pci_dev *pdev)
++{
++	struct net_device *dev = pci_get_drvdata(pdev);
++
++	velocity_remove1(dev);
++	pci_release_regions(pdev);
++	pci_set_drvdata(pdev, NULL);
++	pci_disable_device(pdev);
++}
++#endif
++static int __devexit velocity_remove_platform(struct platform_device *pdev)
++{
++	struct net_device *dev = platform_get_drvdata(pdev);
++
++	velocity_remove1(dev);
++	platform_set_drvdata(pdev, NULL);
++	return 0;
++}
+ 
+ /**
+  *	velocity_set_int_opt	-	parser for integer options
+@@ -1347,9 +1374,13 @@
+ 		velocity_soft_reset(vptr);
+ 		mdelay(5);
+ 
++#ifndef CONFIG_ARCH_VT8500
++		/* this causes a hang on VT8500 machines;
++		 * perhaps there is no EEPROM */
+ 		mac_eeprom_reload(regs);
+ 		for (i = 0; i < 6; i++)
+ 			writeb(vptr->dev->dev_addr[i], &(regs->PAR[i]));
++#endif
+ 
+ 		/*
+ 		 *	clear Pre_ACPI bit.
+@@ -1454,21 +1485,23 @@
+ 	struct velocity_opt *opt = &vptr->options;
+ 	const unsigned int rx_ring_size = opt->numrx * sizeof(struct rx_desc);
+ 	const unsigned int tx_ring_size = opt->numtx * sizeof(struct tx_desc);
+-	struct pci_dev *pdev = vptr->pdev;
++	struct device *bdev = vptr->bdev;
+ 	dma_addr_t pool_dma;
+ 	void *pool;
+ 	unsigned int i;
++	unsigned int psize;
+ 
+ 	/*
+ 	 * Allocate all RD/TD rings a single pool.
+ 	 *
+-	 * pci_alloc_consistent() fulfills the requirement for 64 bytes
++	 * dma_alloc_coherent() fulfills the requirement for 64 bytes
+ 	 * alignment
+ 	 */
+-	pool = pci_alloc_consistent(pdev, tx_ring_size * vptr->tx.numq +
+-				    rx_ring_size, &pool_dma);
++	psize = tx_ring_size * vptr->tx.numq + rx_ring_size;
++
++	pool = dma_alloc_coherent(bdev, psize, &pool_dma, GFP_ATOMIC);
+ 	if (!pool) {
+-		dev_err(&pdev->dev, "%s : DMA memory allocation failed.\n",
++		dev_err(bdev, "%s : DMA memory allocation failed.\n",
+ 			vptr->dev->name);
+ 		return -ENOMEM;
+ 	}
+@@ -1519,8 +1552,8 @@
+ 	 */
+ 	skb_reserve(rd_info->skb,
+ 			64 - ((unsigned long) rd_info->skb->data & 63));
+-	rd_info->skb_dma = pci_map_single(vptr->pdev, rd_info->skb->data,
+-					vptr->rx.buf_sz, PCI_DMA_FROMDEVICE);
++	rd_info->skb_dma = dma_map_single(vptr->bdev, rd_info->skb->data,
++					vptr->rx.buf_sz, DMA_FROM_DEVICE);
+ 
+ 	/*
+ 	 *	Fill in the descriptor to match
+@@ -1583,8 +1616,8 @@
+ 
+ 		if (!rd_info->skb)
+ 			continue;
+-		pci_unmap_single(vptr->pdev, rd_info->skb_dma, vptr->rx.buf_sz,
+-				 PCI_DMA_FROMDEVICE);
++		dma_unmap_single(vptr->bdev, rd_info->skb_dma,
++				vptr->rx.buf_sz, DMA_FROM_DEVICE);
+ 		rd_info->skb_dma = 0;
+ 
+ 		dev_kfree_skb(rd_info->skb);
+@@ -1665,7 +1698,7 @@
+ 	const int size = vptr->options.numrx * sizeof(struct rx_desc) +
+ 		vptr->options.numtx * sizeof(struct tx_desc) * vptr->tx.numq;
+ 
+-	pci_free_consistent(vptr->pdev, size, vptr->rx.ring, vptr->rx.pool_dma);
++	dma_free_coherent(vptr->bdev, size, vptr->rx.ring, vptr->rx.pool_dma);
+ }
+ 
+ static int velocity_init_rings(struct velocity_info *vptr, int mtu)
+@@ -1722,8 +1755,8 @@
+ 				pktlen = max_t(size_t, pktlen,
+ 						td->td_buf[i].size & ~TD_QUEUE);
+ 
+-			pci_unmap_single(vptr->pdev, tdinfo->skb_dma[i],
+-					le16_to_cpu(pktlen), PCI_DMA_TODEVICE);
++			dma_unmap_single(vptr->bdev, tdinfo->skb_dma[i],
++					le16_to_cpu(pktlen), DMA_TO_DEVICE);
+ 		}
+ 	}
+ 	dev_kfree_skb_irq(skb);
+@@ -1745,8 +1778,10 @@
+ 	if (td_info->skb) {
+ 		for (i = 0; i < td_info->nskb_dma; i++) {
+ 			if (td_info->skb_dma[i]) {
+-				pci_unmap_single(vptr->pdev, td_info->skb_dma[i],
+-					td_info->skb->len, PCI_DMA_TODEVICE);
++				dma_unmap_single(vptr->bdev,
++						 td_info->skb_dma[i],
++						 td_info->skb->len,
++						 DMA_TO_DEVICE);
+ 				td_info->skb_dma[i] = 0;
+ 			}
+ 		}
+@@ -2024,7 +2059,8 @@
+  */
+ static int velocity_receive_frame(struct velocity_info *vptr, int idx)
+ {
+-	void (*pci_action)(struct pci_dev *, dma_addr_t, size_t, int);
++	void (*action)(struct device *, dma_addr_t, size_t,
++		       enum dma_data_direction);
+ 	struct net_device_stats *stats = &vptr->dev->stats;
+ 	struct velocity_rd_info *rd_info = &(vptr->rx.info[idx]);
+ 	struct rx_desc *rd = &(vptr->rx.ring[idx]);
+@@ -2042,8 +2078,8 @@
+ 
+ 	skb = rd_info->skb;
+ 
+-	pci_dma_sync_single_for_cpu(vptr->pdev, rd_info->skb_dma,
+-				    vptr->rx.buf_sz, PCI_DMA_FROMDEVICE);
++	dma_sync_single_for_cpu(vptr->bdev, rd_info->skb_dma,
++				    vptr->rx.buf_sz, DMA_FROM_DEVICE);
+ 
+ 	/*
+ 	 *	Drop frame not meeting IEEE 802.3
+@@ -2056,18 +2092,18 @@
+ 		}
+ 	}
+ 
+-	pci_action = pci_dma_sync_single_for_device;
++	action = dma_sync_single_for_device;
+ 
+ 	velocity_rx_csum(rd, skb);
+ 
+ 	if (velocity_rx_copy(&skb, pkt_len, vptr) < 0) {
+ 		velocity_iph_realign(vptr, skb, pkt_len);
+-		pci_action = pci_unmap_single;
++		action = dma_unmap_single;
+ 		rd_info->skb = NULL;
+ 	}
+ 
+-	pci_action(vptr->pdev, rd_info->skb_dma, vptr->rx.buf_sz,
+-		   PCI_DMA_FROMDEVICE);
++	action(vptr->bdev, rd_info->skb_dma, vptr->rx.buf_sz,
++		   DMA_FROM_DEVICE);
+ 
+ 	skb_put(skb, pkt_len - 4);
+ 	skb->protocol = eth_type_trans(skb, vptr->dev);
+@@ -2202,7 +2238,10 @@
+ 		__napi_schedule(&vptr->napi);
+ 	}
+ 
+-	if (isr_status & (~(ISR_PRXI | ISR_PPRXI | ISR_PTXI | ISR_PPTXI)))
++	/* ISR0 seems to flag along with ISR_PRXI on VT8500 machines,
++	* spamming the error routine */
++	if (isr_status & (~(ISR_ISR3 | ISR_ISR2 | ISR_ISR1 | ISR_ISR0 |
++			ISR_PRXI | ISR_PPRXI | ISR_PTXI | ISR_PPTXI)))
+ 		velocity_error(vptr, isr_status);
+ 
+ 	spin_unlock(&vptr->lock);
+@@ -2230,15 +2269,15 @@
+ 		goto out;
+ 
+ 	/* Ensure chip is running */
+-	pci_set_power_state(vptr->pdev, PCI_D0);
++	velocity_set_power_state(vptr, PCI_D0);
+ 
+ 	velocity_init_registers(vptr, VELOCITY_INIT_COLD);
+ 
+-	ret = request_irq(vptr->pdev->irq, velocity_intr, IRQF_SHARED,
++	ret = request_irq(dev->irq, velocity_intr, IRQF_SHARED,
+ 			  dev->name, dev);
+ 	if (ret < 0) {
+ 		/* Power down the chip */
+-		pci_set_power_state(vptr->pdev, PCI_D3hot);
++		velocity_set_power_state(vptr, PCI_D3hot);
+ 		velocity_free_rings(vptr);
+ 		goto out;
+ 	}
+@@ -2271,6 +2310,12 @@
+ 	mac_clear_isr(regs);
+ }
+ 
++void velocity_shutdown_platform(struct platform_device *pdev)
++{
++	struct velocity_info *vptr = netdev_priv(platform_get_drvdata(pdev));
++	velocity_shutdown(vptr);
++}
++
+ /**
+  *	velocity_change_mtu	-	MTU change callback
+  *	@dev: network device
+@@ -2310,7 +2355,7 @@
+ 		}
+ 
+ 		tmp_vptr->dev = dev;
+-		tmp_vptr->pdev = vptr->pdev;
++		tmp_vptr->bdev = vptr->bdev;
+ 		tmp_vptr->options = vptr->options;
+ 		tmp_vptr->tx.numq = vptr->tx.numq;
+ 
+@@ -2410,7 +2455,7 @@
+ 	   saving then we need to bring the device back up to talk to it */
+ 
+ 	if (!netif_running(dev))
+-		pci_set_power_state(vptr->pdev, PCI_D0);
++		velocity_set_power_state(vptr, PCI_D0);
+ 
+ 	switch (cmd) {
+ 	case SIOCGMIIPHY:	/* Get address of MII PHY in use. */
+@@ -2423,7 +2468,7 @@
+ 		ret = -EOPNOTSUPP;
+ 	}
+ 	if (!netif_running(dev))
+-		pci_set_power_state(vptr->pdev, PCI_D3hot);
++		velocity_set_power_state(vptr, PCI_D3hot);
+ 
+ 
+ 	return ret;
+@@ -2545,7 +2590,8 @@
+ 	 *	add it to the transmit ring.
+ 	 */
+ 	tdinfo->skb = skb;
+-	tdinfo->skb_dma[0] = pci_map_single(vptr->pdev, skb->data, pktlen, PCI_DMA_TODEVICE);
++	tdinfo->skb_dma[0] = dma_map_single(vptr->bdev, skb->data, pktlen,
++					    DMA_TO_DEVICE);
+ 	td_ptr->tdesc0.len = cpu_to_le16(pktlen);
+ 	td_ptr->td_buf[0].pa_low = cpu_to_le32(tdinfo->skb_dma[0]);
+ 	td_ptr->td_buf[0].pa_high = 0;
+@@ -2555,7 +2601,7 @@
+ 	for (i = 0; i < skb_shinfo(skb)->nr_frags; i++) {
+ 		const skb_frag_t *frag = &skb_shinfo(skb)->frags[i];
+ 
+-		tdinfo->skb_dma[i + 1] = skb_frag_dma_map(&vptr->pdev->dev,
++		tdinfo->skb_dma[i + 1] = skb_frag_dma_map(vptr->bdev,
+ 							  frag, 0,
+ 							  skb_frag_size(frag),
+ 							  DMA_TO_DEVICE);
+@@ -2620,20 +2666,29 @@
+ 
+ /**
+  *	velocity_init_info	-	init private data
+- *	@pdev: PCI device
++ *	@pdev: PCI/platform device's dev entry
+  *	@vptr: Velocity info
+  *	@info: Board type
++ *	@bustype: bus type
+  *
+  *	Set up the initial velocity_info struct for the device that has been
+  *	discovered.
+  */
+-static void __devinit velocity_init_info(struct pci_dev *pdev,
++static void __devinit velocity_init_info(void *pdev,
+ 					 struct velocity_info *vptr,
+-					 const struct velocity_info_tbl *info)
++					 const struct velocity_info_tbl *info,
++					 enum velocity_bus_type bustype)
+ {
+ 	memset(vptr, 0, sizeof(struct velocity_info));
+ 
+-	vptr->pdev = pdev;
++	if (bustype == BUS_PCI) {
++		vptr->pdev.pcidev = (struct pci_dev *)pdev;
++		vptr->bdev = &vptr->pdev.pcidev->dev;
++	} else {
++		vptr->pdev.platdev = (struct platform_device *)pdev;
++		vptr->bdev = &vptr->pdev.platdev->dev;
++	}
++	vptr->bustype = bustype;
+ 	vptr->chip_id = info->chip_id;
+ 	vptr->tx.numq = info->txqueue;
+ 	vptr->multicast_limit = MCAM_SIZE;
+@@ -2641,40 +2696,47 @@
+ }
+ 
+ /**
+- *	velocity_get_pci_info	-	retrieve PCI info for device
++ *	velocity_get_config_info	-	retrieve bus info for device
+  *	@vptr: velocity device
+- *	@pdev: PCI device it matches
+  *
+  *	Retrieve the PCI configuration space data that interests us from
+- *	the kernel PCI layer
++ *	the kernel PCI layer, or the equivalent data from the platform device
+  */
+-static int __devinit velocity_get_pci_info(struct velocity_info *vptr, struct pci_dev *pdev)
++static int __devinit velocity_get_config_info(struct velocity_info *vptr)
+ {
+-	vptr->rev_id = pdev->revision;
+-
+-	pci_set_master(pdev);
++	struct pci_dev *pcidev;
++	struct platform_device *platdev;
++	if (vptr->bustype == BUS_PCI) {
++		pcidev = vptr->pdev.pcidev;
++		vptr->rev_id = pcidev->revision;
++		pci_set_master(pcidev);
+ 
+-	vptr->ioaddr = pci_resource_start(pdev, 0);
+-	vptr->memaddr = pci_resource_start(pdev, 1);
++		vptr->ioaddr = pci_resource_start(pcidev, 0);
++		vptr->memaddr = pci_resource_start(pcidev, 1);
+ 
+-	if (!(pci_resource_flags(pdev, 0) & IORESOURCE_IO)) {
+-		dev_err(&pdev->dev,
++		if (!(pci_resource_flags(pcidev, 0) & IORESOURCE_IO)) {
++			dev_err(vptr->bdev,
+ 			   "region #0 is not an I/O resource, aborting.\n");
+ 		return -EINVAL;
+ 	}
+ 
+-	if ((pci_resource_flags(pdev, 1) & IORESOURCE_IO)) {
+-		dev_err(&pdev->dev,
++		if ((pci_resource_flags(pcidev, 1) & IORESOURCE_IO)) {
++			dev_err(vptr->bdev,
+ 			   "region #1 is an I/O resource, aborting.\n");
+ 		return -EINVAL;
+ 	}
+ 
+-	if (pci_resource_len(pdev, 1) < VELOCITY_IO_SIZE) {
+-		dev_err(&pdev->dev, "region #1 is too small.\n");
++		if (pci_resource_len(pcidev, 1) < VELOCITY_IO_SIZE) {
++			dev_err(vptr->bdev, "region #1 is too small.\n");
+ 		return -EINVAL;
+ 	}
+-	vptr->pdev = pdev;
+-
++	} else if (vptr->bustype == BUS_PLATFORM) {
++		platdev = vptr->pdev.platdev;
++		vptr->ioaddr = platdev->resource[0].start;
++		vptr->memaddr = vptr->ioaddr;
++	} else {
++		return 1;
++	}
+ 	return 0;
+ }
+ 
+@@ -2709,22 +2771,36 @@
+  *	Configure a discovered adapter from scratch. Return a negative
+  *	errno error code on failure paths.
+  */
+-static int __devinit velocity_found1(struct pci_dev *pdev, const struct pci_device_id *ent)
++
++static int __devinit velocity_found1(void *pdev,
++				     const struct velocity_info_tbl *info,
++				     enum velocity_bus_type bustype)
+ {
+ 	static int first = 1;
+ 	struct net_device *dev;
+ 	int i;
+ 	const char *drv_string;
+-	const struct velocity_info_tbl *info = &chip_info_table[ent->driver_data];
+ 	struct velocity_info *vptr;
+ 	struct mac_regs __iomem *regs;
+ 	int ret = -ENOMEM;
++	struct device *bdev;
++	int pci = (bustype == BUS_PCI) ? 1 : 0;
++	struct pci_dev *pcidev;
++	struct platform_device *platdev;
++
++	if (pci) {
++		pcidev = pdev;
++		bdev = &pcidev->dev;
++	} else {
++		platdev = pdev;
++		bdev = &platdev->dev;
++	}
+ 
+ 	/* FIXME: this driver, like almost all other ethernet drivers,
+ 	 * can support more than MAX_UNITS.
+ 	 */
+ 	if (velocity_nics >= MAX_UNITS) {
+-		dev_notice(&pdev->dev, "already found %d NICs.\n",
++		dev_notice(bdev, "already found %d NICs.\n",
+ 			   velocity_nics);
+ 		return -ENODEV;
+ 	}
+@@ -2735,7 +2811,7 @@
+ 
+ 	/* Chain it all together */
+ 
+-	SET_NETDEV_DEV(dev, &pdev->dev);
++	SET_NETDEV_DEV(dev, bdev);
+ 	vptr = netdev_priv(dev);
+ 
+ 
+@@ -2747,27 +2823,40 @@
+ 		first = 0;
+ 	}
+ 
+-	velocity_init_info(pdev, vptr, info);
++	velocity_init_info(pdev, vptr, info, bustype);
+ 
+ 	vptr->dev = dev;
+ 
+-	ret = pci_enable_device(pdev);
++	if (pci) {
++		ret = pci_enable_device(pcidev);
+ 	if (ret < 0)
+ 		goto err_free_dev;
+ 
+-	dev->irq = pdev->irq;
++		dev->irq = pcidev->irq;
++	} else {
++		for (i = 0; i < platdev->num_resources; i++) {
++			if (platdev->resource[i].flags == IORESOURCE_IRQ) {
++				dev->irq = platdev->resource[i].start;
++				break;
++			}
++		}
++		if (i >= platdev->num_resources)
++			goto err_disable;
++	}
+ 
+-	ret = velocity_get_pci_info(vptr, pdev);
++	ret = velocity_get_config_info(vptr);
+ 	if (ret < 0) {
+ 		/* error message already printed */
+ 		goto err_disable;
+ 	}
+ 
+-	ret = pci_request_regions(pdev, VELOCITY_NAME);
++	if (pci) {
++		ret = pci_request_regions(pcidev, VELOCITY_NAME);
+ 	if (ret < 0) {
+-		dev_err(&pdev->dev, "No PCI resources.\n");
++			dev_err(bdev, "No PCI resources.\n");
+ 		goto err_disable;
+ 	}
++	}
+ 
+ 	regs = ioremap(vptr->memaddr, VELOCITY_IO_SIZE);
+ 	if (regs == NULL) {
+@@ -2776,6 +2865,8 @@
+ 	}
+ 
+ 	vptr->mac_regs = regs;
++	if (!pci)
++		vptr->rev_id = readb((&regs->PAR[0]) + 0x8);
+ 
+ 	mac_wol_reset(regs);
+ 
+@@ -2785,7 +2876,7 @@
+ 		dev->dev_addr[i] = readb(&regs->PAR[i]);
+ 
+ 
+-	drv_string = dev_driver_string(&pdev->dev);
++	drv_string = dev_driver_string(bdev);
+ 
+ 	velocity_get_options(&vptr->options, velocity_nics, drv_string);
+ 
+@@ -2806,7 +2897,6 @@
+ 
+ 	vptr->phy_id = MII_GET_PHY_ID(vptr->mac_regs);
+ 
+-	dev->irq = pdev->irq;
+ 	dev->netdev_ops = &velocity_netdev_ops;
+ 	dev->ethtool_ops = &velocity_ethtool_ops;
+ 	netif_napi_add(dev, &vptr->napi, velocity_poll, VELOCITY_NAPI_WEIGHT);
+@@ -2825,11 +2915,15 @@
+ 	}
+ 
+ 	velocity_print_info(vptr);
+-	pci_set_drvdata(pdev, dev);
++
++	if (pci)
++		pci_set_drvdata(pcidev, dev);
++	else
++		platform_set_drvdata(platdev, dev);
+ 
+ 	/* and leave the chip powered down */
+ 
+-	pci_set_power_state(pdev, PCI_D3hot);
++	velocity_set_power_state(vptr, PCI_D3hot);
+ 	velocity_nics++;
+ out:
+ 	return ret;
+@@ -2845,7 +2939,23 @@
+ 	goto out;
+ }
+ 
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PCI
++static int __devinit velocity_probe_pci(struct pci_dev *pdev,
++					const struct pci_device_id *ent)
++{
++	const struct velocity_info_tbl *info =
++					&chip_info_table[ent->driver_data];
++
++	return velocity_found1(pdev, info, BUS_PCI);
++}
++#endif
++static int __devinit velocity_probe_platform(struct platform_device *pdev)
++{
++	const struct velocity_info_tbl *info = &chip_info_table[0];
++
++	return velocity_found1(pdev, info, BUS_PLATFORM);
++}
++
+ /**
+  *	wol_calc_crc		-	WOL CRC
+  *	@pattern: data pattern
+@@ -3002,11 +3112,24 @@
+ 
+ }
+ 
+-static int velocity_suspend(struct pci_dev *pdev, pm_message_t state)
++static int velocity_suspend(void *pdev, pm_message_t state,
++			    enum velocity_bus_type bustype)
+ {
+-	struct net_device *dev = pci_get_drvdata(pdev);
+-	struct velocity_info *vptr = netdev_priv(dev);
++	struct net_device *dev;
++	struct velocity_info *vptr;
+ 	unsigned long flags;
++	int pci = (bustype == BUS_PCI) ? 1 : 0;
++	struct pci_dev *pcidev;
++	struct platform_device *platdev;
++	if (pci) {
++		pcidev = pdev;
++		dev = pci_get_drvdata(pcidev);
++	} else {
++		platdev = pdev;
++		dev = platform_get_drvdata(platdev);
++	}
++
++	vptr = netdev_priv(dev);
+ 
+ 	if (!netif_running(vptr->dev))
+ 		return 0;
+@@ -3014,25 +3137,41 @@
+ 	netif_device_detach(vptr->dev);
+ 
+ 	spin_lock_irqsave(&vptr->lock, flags);
+-	pci_save_state(pdev);
++
++	if (pci)
++		pci_save_state(pcidev);
+ 
+ 	if (vptr->flags & VELOCITY_FLAGS_WOL_ENABLED) {
+ 		velocity_get_ip(vptr);
+ 		velocity_save_context(vptr, &vptr->context);
+ 		velocity_shutdown(vptr);
+ 		velocity_set_wol(vptr);
+-		pci_enable_wake(pdev, PCI_D3hot, 1);
+-		pci_set_power_state(pdev, PCI_D3hot);
++		if (pci)
++			pci_enable_wake(pcidev, PCI_D3hot, 1);
++		velocity_set_power_state(vptr, PCI_D3hot);
+ 	} else {
+ 		velocity_save_context(vptr, &vptr->context);
+ 		velocity_shutdown(vptr);
+-		pci_disable_device(pdev);
+-		pci_set_power_state(pdev, pci_choose_state(pdev, state));
++		if (pci)
++			pci_disable_device(pcidev);
++		velocity_set_power_state(vptr,
++					 vel_choose_state(vptr->bdev, state));
+ 	}
+ 
+ 	spin_unlock_irqrestore(&vptr->lock, flags);
+ 	return 0;
+ }
++#ifdef CONFIG_PCI
++static int velocity_suspend_pci(struct pci_dev *pdev, pm_message_t state)
++{
++	return velocity_suspend(pdev, state, BUS_PCI);
++}
++#endif
++static int velocity_suspend_platform(struct platform_device *pdev,
++				     pm_message_t state)
++{
++	return velocity_suspend(pdev, state, BUS_PLATFORM);
++}
+ 
+ /**
+  *	velocity_restore_context	-	restore registers
+@@ -3069,19 +3208,33 @@
+ 		writeb(*((u8 *) (context->mac_reg + i)), ptr + i);
+ }
+ 
+-static int velocity_resume(struct pci_dev *pdev)
++static int velocity_resume(void *pdev, enum velocity_bus_type bustype)
+ {
+-	struct net_device *dev = pci_get_drvdata(pdev);
+-	struct velocity_info *vptr = netdev_priv(dev);
++	struct net_device *dev;
++	struct velocity_info *vptr;
+ 	unsigned long flags;
+ 	int i;
++	int pci = (bustype == BUS_PCI) ? 1 : 0;
++	struct pci_dev *pcidev;
++	struct platform_device *platdev;
++
++	if (pci) {
++		pcidev = pdev;
++		dev = pci_get_drvdata(pcidev);
++	} else {
++		platdev = pdev;
++		dev = platform_get_drvdata(platdev);
++	}
++	vptr = netdev_priv(dev);
+ 
+ 	if (!netif_running(vptr->dev))
+ 		return 0;
+ 
+-	pci_set_power_state(pdev, PCI_D0);
+-	pci_enable_wake(pdev, 0, 0);
+-	pci_restore_state(pdev);
++	velocity_set_power_state(vptr, PCI_D0);
++	if (pci) {
++		pci_enable_wake(pcidev, 0, 0);
++		pci_restore_state(pcidev);
++	}
+ 
+ 	mac_wol_reset(vptr->mac_regs);
+ 
+@@ -3103,23 +3256,50 @@
+ 
+ 	return 0;
+ }
++#ifdef CONFIG_PCI
++static int velocity_resume_pci(struct pci_dev *pdev)
++{
++	return velocity_resume(pdev, BUS_PCI);
++}
+ #endif
+ 
++static int velocity_resume_platform(struct platform_device *pdev)
++{
++	return velocity_resume(pdev, BUS_PLATFORM);
++}
++
+ /*
+  *	Definition for our device driver. The PCI layer interface
+  *	uses this to handle all our card discover and plugging
+  */
++#ifdef CONFIG_PCI
+ static struct pci_driver velocity_driver = {
+ 	.name		= VELOCITY_NAME,
+ 	.id_table	= velocity_id_table,
+-	.probe		= velocity_found1,
+-	.remove		= __devexit_p(velocity_remove1),
++	.probe		= velocity_probe_pci,
++	.remove		= __devexit_p(velocity_remove_pci),
+ #ifdef CONFIG_PM
+-	.suspend	= velocity_suspend,
+-	.resume		= velocity_resume,
++	.suspend	= velocity_suspend_pci,
++	.resume		= velocity_resume_pci,
+ #endif
+ };
++#endif
++
++static struct platform_driver velocity_driver = {
++	.probe		= velocity_probe_platform,
++	.remove		= __devexit_p(velocity_remove_platform),
++	.shutdown	= velocity_shutdown_platform,
++#ifdef CONFIG_PM
++	  .suspend	= velocity_suspend_platform,
++	  .resume	= velocity_resume_platform,
++#endif
++	.driver = {
++		.name	= "velocity",
++		.owner	= THIS_MODULE,
++	}
++};
+ 
++MODULE_ALIAS("platform:velocity");
+ 
+ /**
+  *	velocity_ethtool_up	-	pre hook for ethtool
+@@ -3132,7 +3312,7 @@
+ {
+ 	struct velocity_info *vptr = netdev_priv(dev);
+ 	if (!netif_running(dev))
+-		pci_set_power_state(vptr->pdev, PCI_D0);
++		velocity_set_power_state(vptr, PCI_D0);
+ 	return 0;
+ }
+ 
+@@ -3147,7 +3327,7 @@
+ {
+ 	struct velocity_info *vptr = netdev_priv(dev);
+ 	if (!netif_running(dev))
+-		pci_set_power_state(vptr->pdev, PCI_D3hot);
++		velocity_set_power_state(vptr, PCI_D3hot);
+ }
+ 
+ static int velocity_get_settings(struct net_device *dev,
+@@ -3267,9 +3447,12 @@
+ static void velocity_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info)
+ {
+ 	struct velocity_info *vptr = netdev_priv(dev);
+-	strlcpy(info->driver, VELOCITY_NAME, sizeof(info->driver));
+-	strlcpy(info->version, VELOCITY_VERSION, sizeof(info->version));
+-	strlcpy(info->bus_info, pci_name(vptr->pdev), sizeof(info->bus_info));
++	if (vptr->bustype == BUS_PCI)
++		strcpy(info->bus_info, pci_name(vptr->pdev.pcidev));
++	else
++		strcpy(info->bus_info, "platform");
++	strcpy(info->driver, VELOCITY_NAME);
++	strcpy(info->version, VELOCITY_VERSION);
+ }
+ 
+ static void velocity_ethtool_get_wol(struct net_device *dev, struct ethtool_wolinfo *wol)
+@@ -3562,9 +3745,14 @@
+ 	int ret;
+ 
+ 	velocity_register_notifier();
++#ifdef CONFIG_PCI
+ 	ret = pci_register_driver(&velocity_driver);
+ 	if (ret < 0)
+ 		velocity_unregister_notifier();
++#endif
++	ret = platform_driver_register(&velocity_driver);
++	if (ret < 0)
++		velocity_unregister_notifier();
+ 	return ret;
+ }
+ 
+@@ -3579,7 +3767,10 @@
+ static void __exit velocity_cleanup_module(void)
+ {
+ 	velocity_unregister_notifier();
++#ifdef CONFIG_PCI
+ 	pci_unregister_driver(&velocity_driver);
++#endif
++	platform_driver_unregister(&velocity_driver);
+ }
+ 
+ module_init(velocity_init_module);
+diff -Naur linux-3.4.orig/drivers/net/ethernet/via/via-velocity.h linux-3.4/drivers/net/ethernet/via/via-velocity.h
+--- linux-3.4.orig/drivers/net/ethernet/via/via-velocity.h	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/drivers/net/ethernet/via/via-velocity.h	2019-03-07 02:50:20.000000000 -0700
+@@ -1433,9 +1433,38 @@
+ 
+ #define GET_RD_BY_IDX(vptr, idx)   (vptr->rd_ring[idx])
+ 
++static inline char vel_choose_state(struct device *dev, pm_message_t state)
++{
++	switch (state.event) {
++	case PM_EVENT_ON:
++		return PCI_D0;
++	case PM_EVENT_FREEZE:
++	case PM_EVENT_PRETHAW:
++		/* REVISIT both freeze and pre-thaw "should" use D0 */
++	case PM_EVENT_SUSPEND:
++	case PM_EVENT_HIBERNATE:
++		return PCI_D3hot;
++	default:
++		dev_info(dev, "unrecognized suspend event %d\n",
++			state.event);
++		BUG();
++	}
++	return PCI_D0;
++}
++
++enum velocity_bus_type {
++	BUS_PCI,
++	BUS_PLATFORM
++};
++
+ struct velocity_info {
+-	struct pci_dev *pdev;
++	union {
++		struct pci_dev *pcidev;
++		struct platform_device *platdev;
++	} pdev;
++	struct device *bdev;
+ 	struct net_device *dev;
++	enum velocity_bus_type bustype;
+ 
+ 	unsigned long active_vlans[BITS_TO_LONGS(VLAN_N_VID)];
+ 	u8 ip_addr[4];
+@@ -1575,5 +1604,4 @@
+ 	writew(vptr->options.numrx, &regs->RBRDU);
+ }
+ 
+-
+ #endif
+diff -Naur linux-3.4.orig/drivers/rtc/rtc-vt8500.c linux-3.4/drivers/rtc/rtc-vt8500.c
+--- linux-3.4.orig/drivers/rtc/rtc-vt8500.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/drivers/rtc/rtc-vt8500.c	2019-03-06 17:20:01.000000000 -0700
+@@ -118,7 +118,7 @@
+ 	tm->tm_min = bcd2bin((time & TIME_MIN_MASK) >> TIME_MIN_S);
+ 	tm->tm_hour = bcd2bin((time & TIME_HOUR_MASK) >> TIME_HOUR_S);
+ 	tm->tm_mday = bcd2bin(date & DATE_DAY_MASK);
+-	tm->tm_mon = bcd2bin((date & DATE_MONTH_MASK) >> DATE_MONTH_S);
++	tm->tm_mon = bcd2bin((date & DATE_MONTH_MASK) >> DATE_MONTH_S) - 1;
+ 	tm->tm_year = bcd2bin((date & DATE_YEAR_MASK) >> DATE_YEAR_S)
+ 			+ ((date >> DATE_CENTURY_S) & 1 ? 200 : 100);
+ 	tm->tm_wday = (time & TIME_DOW_MASK) >> TIME_DOW_S;
+@@ -137,7 +137,7 @@
+ 	}
+ 
+ 	writel((bin2bcd(tm->tm_year - 100) << DATE_YEAR_S)
+-		| (bin2bcd(tm->tm_mon) << DATE_MONTH_S)
++		| (bin2bcd(tm->tm_mon + 1) << DATE_MONTH_S)
+ 		| (bin2bcd(tm->tm_mday)),
+ 		vt8500_rtc->regbase + VT8500_RTC_DS);
+ 	writel((bin2bcd(tm->tm_wday) << TIME_DOW_S)
+diff -Naur linux-3.4.orig/drivers/usb/host/Kconfig linux-3.4/drivers/usb/host/Kconfig
+--- linux-3.4.orig/drivers/usb/host/Kconfig	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/drivers/usb/host/Kconfig	2019-03-06 17:20:01.000000000 -0700
+@@ -443,7 +443,7 @@
+ 
+ config USB_UHCI_HCD
+ 	tristate "UHCI HCD (most Intel and VIA) support"
+-	depends on USB && (PCI || SPARC_LEON)
++	depends on USB && (PCI || SPARC_LEON || ARCH_VT8500)
+ 	---help---
+ 	  The Universal Host Controller Interface is a standard by Intel for
+ 	  accessing the USB hardware in the PC (which is also called the USB
+@@ -461,7 +461,7 @@
+ config USB_UHCI_SUPPORT_NON_PCI_HC
+ 	bool
+ 	depends on USB_UHCI_HCD
+-	default y if SPARC_LEON
++	default y if (SPARC_LEON || ARCH_VT8500)
+ 
+ config USB_UHCI_BIG_ENDIAN_MMIO
+ 	bool
+diff -Naur linux-3.4.orig/drivers/usb/host/uhci-hcd.c linux-3.4/drivers/usb/host/uhci-hcd.c
+--- linux-3.4.orig/drivers/usb/host/uhci-hcd.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/drivers/usb/host/uhci-hcd.c	2019-03-06 17:20:01.000000000 -0700
+@@ -846,6 +846,12 @@
+ #define PLATFORM_DRIVER		uhci_grlib_driver
+ #endif
+ 
++#ifdef CONFIG_ARCH_VT8500
++#include "uhci-vt8500.c"
++#define PLATFORM_DRIVER		uhci_vt8500_driver
++#endif
++
++
+ #if !defined(PCI_DRIVER) && !defined(PLATFORM_DRIVER)
+ #error "missing bus glue for uhci-hcd"
+ #endif
+diff -Naur linux-3.4.orig/drivers/usb/host/uhci-vt8500.c linux-3.4/drivers/usb/host/uhci-vt8500.c
+--- linux-3.4.orig/drivers/usb/host/uhci-vt8500.c	1969-12-31 17:00:00.000000000 -0700
++++ linux-3.4/drivers/usb/host/uhci-vt8500.c	2019-03-06 17:20:01.000000000 -0700
+@@ -0,0 +1,149 @@
++/*
++ * UHCI HCD (Host Controller Driver) for VT8500/WM8505/WM8650
++ *
++ * Copyright (c) 2011 Tony Prisk <linux@prisktech.co.nz>
++ *
++ * This file is based on uhci-grlib.c
++ */
++
++#include <linux/platform_device.h>
++
++static int uhci_vt8500_init(struct usb_hcd *hcd)
++{
++	struct uhci_hcd *uhci = hcd_to_uhci(hcd);
++
++	uhci->rh_numports = uhci_count_ports(hcd);
++
++	/* Set up pointers to to generic functions */
++	uhci->reset_hc = uhci_generic_reset_hc;
++	uhci->check_and_reset_hc = uhci_generic_check_and_reset_hc;
++
++	/* No special actions need to be taken for the functions below */
++	uhci->configure_hc = NULL;
++	uhci->resume_detect_interrupts_are_broken = NULL;
++	uhci->global_suspend_mode_is_broken = NULL;
++
++	/* Reset if the controller isn't already safely quiescent. */
++	check_and_reset_hc(uhci);
++	return 0;
++}
++
++static const struct hc_driver uhci_vt8500_hc_driver = {
++	.description =		hcd_name,
++	.product_desc =		"WonderMedia UHCI Host Controller",
++	.hcd_priv_size =	sizeof(struct uhci_hcd),
++
++	/* Generic hardware linkage */
++	.irq =			uhci_irq,
++	.flags =		HCD_MEMORY | HCD_USB11,
++
++	/* Basic lifecycle operations */
++	.reset =		uhci_vt8500_init,
++	.start =		uhci_start,
++#ifdef CONFIG_PM
++	.pci_suspend =		NULL,
++	.pci_resume =		NULL,
++	.bus_suspend =		uhci_rh_suspend,
++	.bus_resume =		uhci_rh_resume,
++#endif
++	.stop =			uhci_stop,
++
++	.urb_enqueue =		uhci_urb_enqueue,
++	.urb_dequeue =		uhci_urb_dequeue,
++
++	.endpoint_disable =	uhci_hcd_endpoint_disable,
++	.get_frame_number =	uhci_hcd_get_frame_number,
++
++	.hub_status_data =	uhci_hub_status_data,
++	.hub_control =		uhci_hub_control,
++};
++
++
++static int __devinit uhci_hcd_vt8500_probe(struct platform_device *pdev)
++{
++	struct usb_hcd *hcd;
++	struct uhci_hcd	*uhci;
++	struct resource *res;
++	int ret;
++
++	if (usb_disabled())
++		return -ENODEV;
++
++	hcd = usb_create_hcd(&uhci_vt8500_hc_driver, &pdev->dev,
++			pdev->name);
++	if (!hcd)
++		return -ENOMEM;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	hcd->rsrc_start = res->start;
++	hcd->rsrc_len = resource_size(res);
++
++	if (!request_mem_region(hcd->rsrc_start, hcd->rsrc_len, hcd_name)) {
++		printk(KERN_ERR "%s: request_mem_region failed\n", __FILE__);
++		ret = -EBUSY;
++		goto err_rmr;
++	}
++
++	hcd->regs = ioremap(hcd->rsrc_start, hcd->rsrc_len);
++	if (!hcd->regs) {
++		printk(KERN_ERR "%s: ioremap failed\n", __FILE__);
++		ret = -ENOMEM;
++		goto err_irq;
++	}
++
++	uhci = hcd_to_uhci(hcd);
++
++	uhci->regs = hcd->regs;
++
++	ret = usb_add_hcd(hcd, pdev->resource[1].start, IRQF_DISABLED | IRQF_SHARED);
++	if (ret)
++		goto err_uhci;
++
++	return 0;
++
++err_uhci:
++	iounmap(hcd->regs);
++err_irq:
++	release_mem_region(hcd->rsrc_start, hcd->rsrc_len);
++err_rmr:
++	usb_put_hcd(hcd);
++
++	return ret;
++}
++
++static int uhci_hcd_vt8500_remove(struct platform_device *pdev)
++{
++	struct usb_hcd *hcd = platform_get_drvdata(pdev);
++
++	usb_remove_hcd(hcd);
++	iounmap(hcd->regs);
++	release_mem_region(hcd->rsrc_start, hcd->rsrc_len);
++	usb_put_hcd(hcd);
++	platform_set_drvdata(pdev, NULL);
++
++	return 0;
++}
++
++/* Make sure the controller is quiescent and that we're not using it
++ * any more.  This is mainly for the benefit of programs which, like kexec,
++ * expect the hardware to be idle: not doing DMA or generating IRQs.
++ *
++ * This routine may be called in a damaged or failing kernel.  Hence we
++ * do not acquire the spinlock before shutting down the controller.
++ */
++static void uhci_hcd_vt8500_shutdown(struct platform_device *op)
++{
++	struct usb_hcd *hcd = dev_get_drvdata(&op->dev);
++
++	uhci_hc_died(hcd_to_uhci(hcd));
++}
++
++static struct platform_driver uhci_vt8500_driver = {
++	.probe		= uhci_hcd_vt8500_probe,
++	.remove		= uhci_hcd_vt8500_remove,
++	.shutdown	= uhci_hcd_vt8500_shutdown,
++	.driver = {
++		.name = "vt8500-uhci",
++		.owner = THIS_MODULE,
++	},
++};
+diff -Naur linux-3.4.orig/drivers/video/wm8505fb.c linux-3.4/drivers/video/wm8505fb.c
+--- linux-3.4.orig/drivers/video/wm8505fb.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/drivers/video/wm8505fb.c	2019-03-06 17:20:01.000000000 -0700
+@@ -59,8 +59,8 @@
+ 	writel(fbi->fb.fix.smem_start, fbi->regbase + WMT_GOVR_FBADDR);
+ 	writel(fbi->fb.fix.smem_start, fbi->regbase + WMT_GOVR_FBADDR1);
+ 
+-	/* Set in-memory picture format to RGB 32bpp */
+-	writel(0x1c,		       fbi->regbase + WMT_GOVR_COLORSPACE);
++	/* Set in-memory picture format to RGB */
++	writel(0x31c,		       fbi->regbase + WMT_GOVR_COLORSPACE);
+ 	writel(1,		       fbi->regbase + WMT_GOVR_COLORSPACE1);
+ 
+ 	/* Virtual buffer size */
+@@ -127,6 +127,18 @@
+ 		info->var.blue.msb_right = 0;
+ 		info->fix.visual = FB_VISUAL_TRUECOLOR;
+ 		info->fix.line_length = info->var.xres_virtual << 2;
++	} else if (info->var.bits_per_pixel == 16) {
++		info->var.red.offset = 11;
++		info->var.red.length = 5;
++		info->var.red.msb_right = 0;
++		info->var.green.offset = 5;
++		info->var.green.length = 6;
++		info->var.green.msb_right = 0;
++		info->var.blue.offset = 0;
++		info->var.blue.length = 5;
++		info->var.blue.msb_right = 0;
++		info->fix.visual = FB_VISUAL_TRUECOLOR;
++		info->fix.line_length = info->var.xres_virtual << 1;
+ 	}
+ 
+ 	wm8505fb_set_timing(info);
+diff -Naur linux-3.4.orig/kernel/events/core.c linux-3.4/kernel/events/core.c
+--- linux-3.4.orig/kernel/events/core.c	2012-05-20 15:29:13.000000000 -0700
++++ linux-3.4/kernel/events/core.c	2019-03-06 17:20:01.000000000 -0700
+@@ -2381,6 +2381,9 @@
+ static DEFINE_PER_CPU(int, perf_throttled_count);
+ static DEFINE_PER_CPU(u64, perf_throttled_seq);
+ 
++static DEFINE_PER_CPU(int, perf_throttled_count);
++static DEFINE_PER_CPU(u64, perf_throttled_seq);
++
+ static void perf_adjust_period(struct perf_event *event, u64 nsec, u64 count, bool disable)
+ {
+ 	struct hw_perf_event *hwc = &event->hw;
+@@ -4627,6 +4630,7 @@
+ 			.misc = 0,
+ 			.size = sizeof(throttle_event),
+ 		},
++	u64 seq;
+ 		.time		= perf_clock(),
+ 		.id		= primary_event_id(event),
+ 		.stream_id	= event->id,
